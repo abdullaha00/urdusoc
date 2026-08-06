@@ -1,0 +1,354 @@
+/**
+ * Database schema.
+ *
+ * Column names are written out in snake_case so the generated SQL reads plainly
+ * for whoever inherits this. Money is always integer pence — never floats.
+ */
+
+import type { AdapterAccountType } from "next-auth/adapters";
+import {
+  boolean,
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+/* -------------------------------------------------------------------------- */
+/* Enums                                                                       */
+/* -------------------------------------------------------------------------- */
+
+export const eventKindEnum = pgEnum("event_kind", [
+  "mushaira",
+  "social",
+  "workshop",
+  "talk",
+  "collaboration",
+]);
+
+/** How people sign up: not at all, a free capped list, or a paid ticket. */
+export const ticketingModeEnum = pgEnum("ticketing_mode", [
+  "none",
+  "rsvp",
+  "paid",
+]);
+
+export const registrationStatusEnum = pgEnum("registration_status", [
+  "reserved",
+  "paid",
+  "cancelled",
+  "checked_in",
+]);
+
+export const membershipTypeEnum = pgEnum("membership_type", [
+  "student",
+  "alumni",
+  "friend",
+]);
+
+export const memberStatusEnum = pgEnum("member_status", [
+  "pending",
+  "active",
+  "expired",
+]);
+
+export const subscriberStatusEnum = pgEnum("subscriber_status", [
+  "pending",
+  "confirmed",
+  "unsubscribed",
+]);
+
+/** Owners may manage the admin allowlist; editors may only manage content. */
+export const adminRoleEnum = pgEnum("admin_role", ["owner", "editor"]);
+
+/* -------------------------------------------------------------------------- */
+/* Auth.js tables                                                              */
+/* -------------------------------------------------------------------------- */
+
+export const users = pgTable("user", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name"),
+  email: text("email").notNull(),
+  emailVerified: timestamp("email_verified", { mode: "date" }),
+  image: text("image"),
+});
+
+export const accounts = pgTable(
+  "account",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").$type<AdapterAccountType>().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.provider, table.providerAccountId] }),
+  ],
+);
+
+export const sessions = pgTable("session", {
+  sessionToken: text("session_token").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verification_token",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.identifier, table.token] })],
+);
+
+/* -------------------------------------------------------------------------- */
+/* Committee access                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Allowlist of addresses permitted to sign in to /admin. Signing in is refused
+ * for anyone not listed here, so a leaked magic link to a stranger is useless.
+ * Handover: the outgoing president adds the incoming one, then removes their own row.
+ */
+export const admins = pgTable("admins", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  role: adminRoleEnum("role").notNull().default("editor"),
+  addedByEmail: text("added_by_email"),
+  lastSignInAt: timestamp("last_sign_in_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/* -------------------------------------------------------------------------- */
+/* Events                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export const events = pgTable(
+  "events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    /** Optional Urdu title, shown in Nastaliq alongside the English. */
+    titleUrdu: text("title_urdu"),
+    kind: eventKindEnum("kind").notNull().default("mushaira"),
+    /** Decorative Urdu label for the event card, e.g. محفل. */
+    kindUrdu: text("kind_urdu"),
+    /** One sentence, used on cards and in metadata. */
+    summary: text("summary").notNull(),
+    /** Optional long description (Markdown). */
+    body: text("body"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    venue: text("venue").notNull(),
+    /** Null means uncapped. */
+    capacity: integer("capacity"),
+    ticketing: ticketingModeEnum("ticketing").notNull().default("none"),
+    pricePence: integer("price_pence").notNull().default(0),
+    published: boolean("published").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("events_starts_at_idx").on(table.startsAt)],
+);
+
+export const registrations = pgTable(
+  "registrations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    quantity: integer("quantity").notNull().default(1),
+    /** Short human-readable code shown on the door list. */
+    reference: text("reference").notNull().unique(),
+    status: registrationStatusEnum("status").notNull().default("reserved"),
+    /** Set for paid events; unique so replayed Stripe webhooks are no-ops. */
+    stripeSessionId: text("stripe_session_id").unique(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+  },
+  (table) => [
+    // One booking per address per event.
+    uniqueIndex("registrations_event_email_idx").on(table.eventId, table.email),
+    index("registrations_event_idx").on(table.eventId),
+  ],
+);
+
+/* -------------------------------------------------------------------------- */
+/* Membership and mailing list                                                 */
+/* -------------------------------------------------------------------------- */
+
+export const members = pgTable(
+  "members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    /** Cambridge CRSid, if they have one. */
+    crsid: text("crsid"),
+    type: membershipTypeEnum("type").notNull().default("student"),
+    status: memberStatusEnum("status").notNull().default("pending"),
+    pricePence: integer("price_pence").notNull().default(0),
+    stripeSessionId: text("stripe_session_id").unique(),
+    stripeCustomerId: text("stripe_customer_id"),
+    /** Null means life membership. */
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    joinedAt: timestamp("joined_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("members_status_idx").on(table.status)],
+);
+
+export const subscribers = pgTable("subscribers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  status: subscriberStatusEnum("status").notNull().default("pending"),
+  /** Used for both the double opt-in link and one-click unsubscribe. */
+  token: text("token").notNull().unique(),
+  /** Where they signed up, e.g. "footer" or "join". */
+  source: text("source"),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  unsubscribedAt: timestamp("unsubscribed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/* -------------------------------------------------------------------------- */
+/* Gallery                                                                     */
+/* -------------------------------------------------------------------------- */
+
+export const albums = pgTable("albums", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  /** Optional link back to the event the photos came from. */
+  eventId: uuid("event_id").references(() => events.id, {
+    onDelete: "set null",
+  }),
+  takenOn: timestamp("taken_on", { withTimezone: true }),
+  /**
+   * Name of the CSS placeholder drawn when the album has no photos yet
+   * (see src/components/past-moments.tsx). Lets the site look finished before
+   * the committee has uploaded anything.
+   */
+  motif: text("motif"),
+  published: boolean("published").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const photos = pgTable(
+  "photos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    albumId: uuid("album_id")
+      .notNull()
+      .references(() => albums.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    /** Required — the admin upload form will not accept a photo without it. */
+    alt: text("alt").notNull(),
+    caption: text("caption"),
+    orderIndex: integer("order_index").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("photos_album_idx").on(table.albumId, table.orderIndex)],
+);
+
+/* -------------------------------------------------------------------------- */
+/* Committee roster and verse archive                                          */
+/* -------------------------------------------------------------------------- */
+
+export const committee = pgTable(
+  "committee",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    nameUrdu: text("name_urdu"),
+    role: text("role").notNull(),
+    bio: text("bio"),
+    email: text("email"),
+    photoUrl: text("photo_url"),
+    /** Academic year, e.g. "2026–27". */
+    academicYear: text("academic_year").notNull(),
+    isCurrent: boolean("is_current").notNull().default(true),
+    orderIndex: integer("order_index").notNull().default(0),
+  },
+  (table) => [
+    index("committee_year_idx").on(table.academicYear, table.orderIndex),
+  ],
+);
+
+/**
+ * The couplets shown in "From the world of Urdu". Exactly one row should have
+ * `featured` set; the rest form the archive on /urdu.
+ */
+export const verses = pgTable("verses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  urduLines: text("urdu_lines").array().notNull(),
+  transliterationLines: text("transliteration_lines").array().notNull(),
+  translation: text("translation").notNull(),
+  poetName: text("poet_name").notNull(),
+  poetUrdu: text("poet_urdu"),
+  poetYears: text("poet_years"),
+  note: text("note"),
+  featured: boolean("featured").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/* -------------------------------------------------------------------------- */
+/* Inferred types                                                              */
+/* -------------------------------------------------------------------------- */
+
+export type Event = typeof events.$inferSelect;
+export type NewEvent = typeof events.$inferInsert;
+export type Registration = typeof registrations.$inferSelect;
+export type Member = typeof members.$inferSelect;
+export type Subscriber = typeof subscribers.$inferSelect;
+export type Album = typeof albums.$inferSelect;
+export type Photo = typeof photos.$inferSelect;
+export type CommitteeMember = typeof committee.$inferSelect;
+export type Verse = typeof verses.$inferSelect;
+export type Admin = typeof admins.$inferSelect;

@@ -1,34 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cambridge University Urdu Society — website mock-up
 
-## Getting Started
+A single-page UI mock-up for UrduSoc, built with Next.js (App Router), TypeScript
+and Tailwind CSS v4. It is front-end only: there is no backend, database, auth,
+CMS, payments or ticketing.
 
-First, run the development server:
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Other scripts: `npm run lint`, `npm run typecheck`, `npm run build`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Editing the site
 
-## Learn More
+**All copy lives in [`src/lib/content.ts`](src/lib/content.ts).** Change the
+event, the featured couplet, the pillars, the footer links or the gallery
+captions there — no component edits needed.
 
-To learn more about Next.js, take a look at the following resources:
+Every outbound link currently points at `PLACEHOLDER_LINK` (`"#"`). Replace those
+with the society's real Instagram, Cambridge SU, term card and membership URLs,
+and swap `CONTACT_EMAIL` for the committee's real address.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How it is put together
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Path | What it is |
+| --- | --- |
+| `src/app/layout.tsx` | Fonts (Cormorant Garamond, Inter, Noto Nastaliq Urdu) and page metadata |
+| `src/app/globals.css` | Colour, font and shadow tokens; paper texture and ruling helpers |
+| `src/app/page.tsx` | Section order for the homepage |
+| `src/components/ui.tsx` | Shared bits: buttons, section labels, the `Urdu` text wrapper |
+| `src/components/*.tsx` | One file per homepage section |
 
-## Deploy on Vercel
+### Urdu text
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Wrap any Urdu in the `Urdu` component from `src/components/ui.tsx`, or set
+`lang="ur" dir="rtl"` and the `urdu` class by hand. Nastaliq needs a generous
+line height, so the `.urdu` class sets one; override it with Tailwind's
+`leading-*` utilities when a heading needs tightening.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Photographs
+
+`src/components/past-moments.tsx` draws three CSS placeholders in place of real
+photos. Swap each `Motif` block for a `next/image` once the society has pictures.

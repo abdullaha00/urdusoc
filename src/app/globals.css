@@ -1,1 +1,109 @@
 @import "tailwindcss";
+
+/*
+ * UrduSoc design tokens.
+ * Palette: warm parchment paper, deep emerald, muted burgundy,
+ * antique gold accents and charcoal ink.
+ */
+@theme {
+  --color-paper: #faf6ec;
+  --color-paper-deep: #f3ead9;
+  --color-rule: #e2d7c2;
+  --color-ink: #22201c;
+  --color-ink-muted: #5b5348;
+  --color-forest: #12402f;
+  --color-forest-soft: #1c5c45;
+  --color-wine: #7a2e3c;
+  --color-wine-deep: #5f2430;
+  --color-gold: #b5893f;
+  --color-gold-deep: #886220;
+  /* Legible gold for small text on the emerald and burgundy panels. */
+  --color-gold-light: #d9b473;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
+  --font-nastaliq: var(--font-nastaliq-urdu), "Noto Nastaliq Urdu", serif;
+
+  --shadow-paper: 0 1px 2px rgb(34 32 28 / 0.04), 0 20px 45px -34px rgb(34 32 28 / 0.55);
+  --shadow-lift: 0 2px 4px rgb(34 32 28 / 0.05), 0 28px 60px -38px rgb(34 32 28 / 0.6);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Clears the sticky header when jumping to an anchor. */
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Keep the focus ring visible on the emerald and burgundy panels. */
+  .on-dark :focus-visible {
+    outline-color: var(--color-paper);
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-gold) 32%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Barely-there warmth, like light falling across a page. */
+  .paper-wash {
+    background-image:
+      radial-gradient(
+        ellipse 70% 55% at 12% 0%,
+        color-mix(in srgb, var(--color-gold) 12%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 60% at 92% 20%,
+        color-mix(in srgb, var(--color-forest) 9%, transparent),
+        transparent 70%
+      );
+  }
+
+  /* Faint manuscript ruling. */
+  .ruled {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 33px,
+      color-mix(in srgb, var(--color-gold) 22%, transparent) 33px,
+      color-mix(in srgb, var(--color-gold) 22%, transparent) 34px
+    );
+  }
+
+  /* Nastaliq sits low and needs room to breathe. */
+  .urdu {
+    font-family: var(--font-nastaliq);
+    line-height: 2.1;
+  }
+}

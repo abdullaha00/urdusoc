@@ -171,7 +171,12 @@ export async function rsvpAction(
 
   return {
     status: "success",
-    message: "Your place is booked — check your email for the details.",
+    // The reference is shown on screen either way (see rsvp-form.tsx), so a
+    // booking still works with email switched off — we just must not promise
+    // a confirmation that is never sent.
+    message: env.emailEnabled
+      ? "Your place is booked — check your email for the details."
+      : "Your place is booked. Please note your reference below — we are not sending confirmation emails at the moment.",
     reference,
   };
 }

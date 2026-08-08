@@ -10,6 +10,7 @@ import {
   users,
   verificationTokens,
 } from "@/lib/db/schema";
+import { sendEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 
 /**
@@ -41,9 +42,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
     },
     providers: [
       Resend({
-        apiKey: env.resendApiKey,
-        from: env.emailFrom,
+        // The provider builds its client eagerly, so it needs *a* key even when
+        // the message is sent by `sendVerificationRequest` below. Reading
+        // `env.resendApiKey` here would throw before that ever runs, which made
+        // signing in locally impossible — see the note on the override.
+        // Both are placeholders when email is not configured. The provider
+        // needs them to construct, and `auth()` runs on every admin request —
+        // so reading a required() value here would 500 the whole admin rather
+        // than just failing to send. Nothing is sent through this client
+        // anyway; `sendVerificationRequest` below does the work.
+        apiKey: env.resendApiKey ?? "not-used-see-below",
+        from: env.emailFrom ?? "UrduSoc <noreply@urdusoc.invalid>",
         name: "Email",
+        /**
+         * Sends the magic link through our own wrapper rather than the
+         * provider's default.
+         *
+         * Two reasons: the link arrives on the society's letterhead like every
+         * other message the site sends, and `sendEmail` logs to the console when
+         * there is no RESEND_API_KEY, so a committee developer can sign in
+         * locally without an email account — which is what `src/lib/email.ts`
+         * always promised but auth did not honour.
+         */
+        async sendVerificationRequest({ identifier, url }) {
+          await sendEmail({
+            to: identifier,
+            subject: "Your UrduSoc committee sign-in link",
+            lines: [
+              "Here is your sign-in link for the UrduSoc committee pages.",
+              url,
+              "It can be used once and expires shortly. If you did not ask to sign in, ignore this email.",
+            ],
+          });
+        },
       }),
     ],
     callbacks: {

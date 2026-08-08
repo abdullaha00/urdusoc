@@ -109,18 +109,21 @@ export function SubmitButton({
   pendingLabel = "Sending…",
   variant = "primary",
   className = "",
+  disabled = false,
 }: {
   children: ReactNode;
   pendingLabel?: string;
   variant?: keyof typeof buttonVariants;
   className?: string;
+  /** Held closed until some precondition is met — see `DangerConfirm`. */
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
 
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending}
       className={`${buttonBase} ${buttonVariants[variant]} ${className}`}
     >

@@ -90,10 +90,24 @@ export async function joinAction(
         set: { name, crsid, type: type as (typeof members.$inferInsert)["type"] },
       });
 
-    if (subscribe) {
+    // Double opt-in cannot work without a confirmation link to click, so the
+    // mailing list is skipped entirely when email is off. The join form hides
+    // the checkbox too; this is the server-side half of the same rule.
+    if (subscribe && env.emailEnabled) {
       await subscribeEmail(email, "join");
     }
+  } catch (error) {
+    console.error("Join failed", error);
+    return {
+      status: "error",
+      message: "Something went wrong signing you up. Please try again.",
+    };
+  }
 
+  // Outside the try: the membership is already saved, and a failed welcome
+  // email must not report a successful signup as a failure. This mirrors how
+  // the RSVP action treats its confirmation.
+  try {
     await sendEmail({
       to: email,
       subject: "Welcome to UrduSoc",
@@ -105,10 +119,13 @@ export async function joinAction(
       ],
     });
   } catch (error) {
-    console.error("Join failed", error);
+    console.error("Join welcome email failed", error);
+  }
+
+  if (!env.emailEnabled) {
     return {
-      status: "error",
-      message: "Something went wrong signing you up. Please try again.",
+      status: "success",
+      message: "Welcome to UrduSoc — you're on the list.",
     };
   }
 

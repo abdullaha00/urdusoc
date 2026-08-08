@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { JoinForm } from "@/components/join-form";
 import { Diamond, PageHeader, SectionLabel, Urdu } from "@/components/ui";
 import { membershipTiers } from "@/lib/content";
+import { env } from "@/lib/env";
+
+// Reads env.emailEnabled at render, so it must not be baked in at build time.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Join",
@@ -26,7 +30,7 @@ export default function JoinPage() {
               Sign up
             </SectionLabel>
             <div className="mt-8">
-              <JoinForm />
+              <JoinForm emailEnabled={env.emailEnabled} />
             </div>
           </div>
 

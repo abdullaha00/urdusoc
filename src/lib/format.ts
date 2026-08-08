@@ -77,3 +77,81 @@ export function formatPrice(pence: number): string {
 export function isPast(date: Date): boolean {
   return date.getTime() < Date.now();
 }
+
+/* -------------------------------------------------------------------------- */
+/* Admin form input <-> timestamptz                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The wall-clock fields Europe/London was showing at `instant`.
+ *
+ * `hourCycle: "h23"` matters: the default en-GB cycle renders midnight as 24,
+ * which would push the date back a day when the parts are reassembled.
+ */
+function londonParts(instant: Date): Record<string, number> {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    hourCycle: "h23",
+  }).formatToParts(instant);
+
+  const fields: Record<string, number> = {};
+  for (const part of parts) {
+    if (part.type !== "literal") fields[part.type] = Number(part.value);
+  }
+  return fields;
+}
+
+/** Minutes Europe/London was ahead of UTC at `instant` — 0 in GMT, 60 in BST. */
+function londonOffsetMinutes(instant: Date): number {
+  const f = londonParts(instant);
+  const asIfUtc = Date.UTC(f.year, f.month - 1, f.day, f.hour, f.minute, f.second);
+  return (asIfUtc - instant.getTime()) / 60_000;
+}
+
+/**
+ * Reads a `<input type="datetime-local">` value as a London wall-clock time.
+ *
+ * The browser sends a zoneless string like "2026-10-23T19:00". Passing that to
+ * `new Date()` interprets it in the *server's* zone — UTC on Vercel — so an
+ * October event entered as 7pm would be stored as 7pm UTC and shown as 8pm BST.
+ * Returns null when the value is missing or malformed, so callers can validate.
+ */
+export function parseLondonDateTime(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(
+    value.trim(),
+  );
+  if (!match) return null;
+
+  const [, year, month, day, hour, minute, second] = match;
+  const naiveUtc = Date.UTC(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    second ? Number(second) : 0,
+  );
+  if (Number.isNaN(naiveUtc)) return null;
+
+  // Two passes: the guess and the answer can sit on opposite sides of a clock
+  // change, so the offset is re-read at the corrected instant.
+  const firstGuess = naiveUtc - londonOffsetMinutes(new Date(naiveUtc)) * 60_000;
+  const instant = naiveUtc - londonOffsetMinutes(new Date(firstGuess)) * 60_000;
+
+  const parsed = new Date(instant);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/** Inverse of `parseLondonDateTime`, for populating an edit form. */
+export function toDateTimeLocalValue(date: Date): string {
+  const f = londonParts(date);
+  const pad = (value: number, width = 2) => String(value).padStart(width, "0");
+  return `${pad(f.year, 4)}-${pad(f.month)}-${pad(f.day)}T${pad(f.hour)}:${pad(f.minute)}`;
+}

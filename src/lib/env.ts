@@ -31,12 +31,39 @@ export const env = {
   get authSecret() {
     return required("AUTH_SECRET");
   },
+  /**
+   * Resend credential. Optional — see `emailEnabled`.
+   */
   get resendApiKey() {
-    return required("RESEND_API_KEY");
+    return optional("RESEND_API_KEY");
   },
-  /** Verified sender, e.g. "UrduSoc <hello@urdusoc.example>". */
+  /** Verified sender, e.g. "UrduSoc <hello@urdusoc.example>". Optional. */
   get emailFrom() {
-    return required("EMAIL_FROM");
+    return optional("EMAIL_FROM");
+  },
+  /**
+   * Whether the site can send email at all.
+   *
+   * Both halves are needed: a key with no verified sender is refused by Resend,
+   * and a sender with no key cannot authenticate. When this is false the site
+   * still runs — `sendEmail` becomes a no-op and the features that depend on a
+   * message actually arriving are hidden rather than silently failing.
+   *
+   * The one thing this cannot soften is committee sign-in, which *is* an email.
+   * Without it `/admin` is unreachable; see README.
+   */
+  get emailEnabled() {
+    return Boolean(optional("RESEND_API_KEY") && optional("EMAIL_FROM"));
+  },
+  /**
+   * Vercel Blob token for gallery uploads.
+   *
+   * Optional on purpose, and deliberately not in REQUIRED_ENV: a society with
+   * no photographs yet should still be able to run the whole site. The admin
+   * hides the uploader when this is unset rather than failing.
+   */
+  get blobToken() {
+    return optional("BLOB_READ_WRITE_TOKEN");
   },
   /** Public origin, used in emails and callbacks. */
   get siteUrl() {
@@ -49,13 +76,14 @@ export const env = {
   },
 } as const;
 
-/** Every variable the app cannot run without, for the preflight check. */
-export const REQUIRED_ENV = [
-  "DATABASE_URL",
-  "AUTH_SECRET",
-  "RESEND_API_KEY",
-  "EMAIL_FROM",
-] as const;
+/**
+ * Every variable the app cannot run without, for the preflight check.
+ *
+ * RESEND_API_KEY and EMAIL_FROM are deliberately absent: the site serves every
+ * public page without them. They are needed for committee sign-in and for the
+ * mailing list, both of which degrade visibly rather than crashing.
+ */
+export const REQUIRED_ENV = ["DATABASE_URL", "AUTH_SECRET"] as const;
 
 export function checkEnv(): { ok: boolean; missing: string[] } {
   const missing = REQUIRED_ENV.filter((name) => !process.env[name]);

@@ -7,8 +7,16 @@ import { society } from "@/lib/content";
 /**
  * Thin wrapper over Resend.
  *
- * In development without a RESEND_API_KEY the message is logged instead of
- * sent, so the whole site can be worked on without an email account.
+ * Sending is optional: with no RESEND_API_KEY and EMAIL_FROM the site still
+ * runs, and this becomes a no-op. Callers therefore never need to guard their
+ * own calls — but anything that *promises* the user a message will arrive must
+ * check `env.emailEnabled` and say something different.
+ *
+ * What gets logged depends on the environment, on purpose. In development the
+ * whole message is printed so a committee developer can follow their own
+ * sign-in link without an email account. In production only the recipient and
+ * subject are printed: the body of a sign-in message contains a link that is
+ * as good as a password, and deployment logs are not the place for it.
  */
 
 type SendArgs = {
@@ -22,8 +30,8 @@ type SendArgs = {
 
 let client: Resend | undefined;
 
-function getClient(): Resend {
-  if (!client) client = new Resend(env.resendApiKey);
+function getClient(apiKey: string): Resend {
+  if (!client) client = new Resend(apiKey);
   return client;
 }
 
@@ -68,18 +76,20 @@ export async function sendEmail({
   lines,
   unsubscribeUrl,
 }: SendArgs): Promise<void> {
-  if (!process.env.RESEND_API_KEY) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("RESEND_API_KEY is not set; cannot send email.");
-    }
+  const apiKey = env.resendApiKey;
+  const from = env.emailFrom;
+
+  if (!apiKey || !from) {
     console.info(
-      `\n[email skipped — no RESEND_API_KEY]\n  to: ${to}\n  subject: ${subject}\n  ${lines.join("\n  ")}\n`,
+      process.env.NODE_ENV === "production"
+        ? `[email not configured — not sent] to: ${to} — subject: ${subject}`
+        : `\n[email not configured — not sent]\n  to: ${to}\n  subject: ${subject}\n  ${lines.join("\n  ")}\n`,
     );
     return;
   }
 
-  const { error } = await getClient().emails.send({
-    from: env.emailFrom,
+  const { error } = await getClient(apiKey).emails.send({
+    from,
     to,
     subject,
     text: lines.join("\n\n"),

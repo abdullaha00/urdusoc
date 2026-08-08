@@ -15,7 +15,16 @@ import { membershipTiers } from "@/lib/content";
 
 const initialState: JoinState = { status: "idle" };
 
-export function JoinForm() {
+export function JoinForm({
+  /**
+   * Whether the site can send email. When it cannot, the mailing-list opt-in is
+   * hidden rather than shown-and-ignored: double opt-in needs a confirmation
+   * link, so ticking it could not do anything.
+   */
+  emailEnabled = true,
+}: {
+  emailEnabled?: boolean;
+}) {
   const [state, formAction] = useActionState(joinAction, initialState);
 
   if (state.status === "success") {
@@ -88,11 +97,13 @@ export function JoinForm() {
       </div>
 
       <div className="flex flex-col gap-4 border-t border-rule pt-6">
-        <Checkbox
-          name="subscribe"
-          defaultChecked
-          label="Email me about upcoming events (a handful of times a term, never more)."
-        />
+        {emailEnabled ? (
+          <Checkbox
+            name="subscribe"
+            defaultChecked
+            label="Email me about upcoming events (a handful of times a term, never more)."
+          />
+        ) : null}
         <Checkbox
           name="consent"
           required

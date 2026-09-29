@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Locked quote erase — bw template</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600&family=EB+Garamond:ital,wght@0,400;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#ffffff; --ink:#111111; --muted:#777777; --line:#dddddd; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'EB Garamond',serif;}
+
+  /* ===== Hero — dud placeholder only ===== */
+  .hero{ position:relative; min-height:100vh; background:var(--bg); display:flex; align-items:center; justify-content:center; text-align:center; }
+  .hero-content{ max-width:680px; padding:0 40px; }
+  h1{ font-family:'Playfair Display',serif; font-weight:600; font-size:50px; line-height:1.14; margin:0 0 20px; color:var(--ink); }
+  .scroll-hint{ font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:40px; }
+
+  /* ===== Locked quote-erase section — same sticky-pin mechanism,
+     birds now flying through the text's own vertical line, larger
+     and heavier-stroked so they read clearly instead of vanishing ===== */
+  .quote-pin-wrapper{ position:relative; height:350vh; background:var(--bg); }
+  .quote-pin{ position:sticky; top:0; height:100vh; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .quote-mask{ position:relative; z-index:2; text-align:center; max-width:560px; padding:0 40px; }
+  .quote-en{ font-family:'Playfair Display',serif; font-style:italic; font-weight:500; font-size:28px; line-height:1.5; margin:0; color:var(--ink); }
+
+  .qbird{ position:absolute; z-index:3; will-change:transform; }
+  .bird{ width:100%; height:auto; display:block; fill:none; stroke:var(--ink); stroke-width:2.6; stroke-linecap:round; animation: bob 3s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-9px);} }
+  .wing{ transform-box:fill-box; }
+  .wing-l{ transform-origin:100% 100%; animation: flapL .7s ease-in-out infinite; }
+  .wing-r{ transform-origin:0% 100%; animation: flapR .7s ease-in-out infinite; }
+  @keyframes flapL{ 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(24deg);} }
+  @keyframes flapR{ 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(-24deg);} }
+
+  .filler{ padding:140px 60px; text-align:center; border-top:1px solid var(--line); }
+  .filler p{ font-family:'Inter',sans-serif; font-size:13px; letter-spacing:.06em; color:var(--muted); margin:0; }
+</style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Dud title goes here</h1>
+      <div class="scroll-hint">Scroll down ↓</div>
+    </div>
+  </section>
+
+  <div class="quote-pin-wrapper">
+    <div class="quote-pin">
+
+      <!-- Lanes now sit at 44–52%, level with the text block, so the
+           birds cut directly across the line rather than passing above it -->
+      <div class="qbird" data-start="130" data-end="-10" data-offset="0" style="top:44%; width:64px;">
+        <svg class="bird" viewBox="0 0 60 24">
+          <path class="wing wing-l" d="M30,12 Q15,0 0,12"/>
+          <path class="wing wing-r" d="M30,12 Q45,0 60,12"/>
+        </svg>
+      </div>
+      <div class="qbird" data-start="150" data-end="12" data-offset=".07" style="top:52%; width:46px;">
+        <svg class="bird" viewBox="0 0 60 24" style="stroke-width:5.5;">
+          <path class="wing wing-l" d="M30,12 Q15,0 0,12"/>
+          <path class="wing wing-r" d="M30,12 Q45,0 60,12"/>
+        </svg>
+      </div>
+      <div class="qbird" data-start="115" data-end="34" data-offset=".14" style="top:48%; width:52px;">
+        <svg class="bird" viewBox="0 0 60 24" style="stroke-width:5;">
+          <path class="wing wing-l" d="M30,12 Q15,0 0,12"/>
+          <path class="wing wing-r" d="M30,12 Q45,0 60,12"/>
+        </svg>
+      </div>
+
+      <div class="quote-mask" id="quoteMask">
+        <!-- DUD TEST LINE — swap for your real content when ready -->
+        <div class="quote-en">This is only a dud line, here to test how cleanly the birds erase it.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <section class="filler">
+    <p>PIN RELEASES HERE — NORMAL SCROLL CONTINUES</p>
+  </section>
+
+  <script>
+    var wrapper = document.querySelector('.quote-pin-wrapper');
+    var mask = document.getElementById('quoteMask');
+    var birds = Array.prototype.slice.call(document.querySelectorAll('.qbird'));
+
+    function update(){
+      var rect = wrapper.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var scrollable = rect.height - vh;
+      var traveled = -rect.top;
+      var progress = scrollable > 0 ? Math.min(1, Math.max(0, traveled / scrollable)) : 0;
+
+      var t;
+      if (progress < 0.12) t = 0;
+      else if (progress > 0.88) t = 1;
+      else t = (progress - 0.12) / 0.76;
+
+      birds.forEach(function(b){
+        var start = parseFloat(b.dataset.start);
+        var end = parseFloat(b.dataset.end);
+        var offset = parseFloat(b.dataset.offset);
+        var bt = Math.min(1, Math.max(0, (t - offset) / (1 - offset)));
+        var x = start + (end - start) * bt;
+        b.style.left = x + '%';
+      });
+
+      var pct = t * 100;
+      var grad = 'linear-gradient(to left, transparent 0%, transparent ' + pct + '%, black ' + (pct + 6) + '%, black 100%)';
+      mask.style.webkitMaskImage = grad;
+      mask.style.maskImage = grad;
+    }
+
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  </script>
+</body>
+</html>

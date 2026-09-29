@@ -1,0 +1,60 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files — never commit real values
+.env*
+# ...except the template. It holds only placeholders, and src/lib/env.ts points
+# at it by name when a variable is missing, so it has to be in the repo.
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Local development database (PGlite)
+.pglite/
+
+# The jali reference photograph.
+#
+# The 17th-century screen it shows is long out of copyright, but the photograph
+# of it is a separate work and we hold no licence for it — it carries the marks
+# of a studio or catalogue shot. It was used as visual reference only; the
+# lattice and arch on the site are original SVG (src/components/jali.tsx), so
+# nothing depends on this file. Keep it out of the history: committing it is
+# far easier than removing it later.
+#
+# The rest of attachments/ is the committee's own work and stays in the repo.
+attachments/jali-new.jpg
+

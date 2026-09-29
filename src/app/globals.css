@@ -1,0 +1,275 @@
+@import "tailwindcss";
+
+/*
+ * UrduSoc design tokens.
+ * Palette: warm parchment paper, deep emerald, muted burgundy,
+ * antique gold accents and charcoal ink.
+ */
+@theme {
+  --color-paper: #faf6ec;
+  --color-paper-deep: #f3ead9;
+  --color-rule: #e2d7c2;
+  --color-ink: #22201c;
+  --color-ink-muted: #5b5348;
+  --color-forest: #12402f;
+  --color-forest-soft: #1c5c45;
+  --color-wine: #7a2e3c;
+  --color-wine-deep: #5f2430;
+  --color-gold: #b5893f;
+  --color-gold-deep: #886220;
+  /* Legible gold for small text on the emerald and burgundy panels. */
+  --color-gold-light: #d9b473;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
+  --font-nastaliq: var(--font-nastaliq-urdu), "Noto Nastaliq Urdu", serif;
+
+  --shadow-paper: 0 1px 2px rgb(34 32 28 / 0.04), 0 20px 45px -34px rgb(34 32 28 / 0.55);
+  --shadow-lift: 0 2px 4px rgb(34 32 28 / 0.05), 0 28px 60px -38px rgb(34 32 28 / 0.6);
+}
+
+/*
+ * Alternative palette, from the 2026 committee brief: a sandier ground, softer
+ * ink, off-white panels. Switch between this and the default by editing
+ * SITE_PALETTE in src/lib/palette.ts — it sets data-palette on <html>.
+ *
+ * Only the paper/ink family is redefined. The accents are shifted just enough
+ * to sit on the warmer ground without going muddy; the hierarchy they carry is
+ * unchanged.
+ */
+html[data-palette="heritage"] {
+  --color-paper: #e2d9cc;
+  --color-paper-deep: #dbd1c2;
+  --color-rule: #c9bda9;
+  --color-ink: #434242;
+  /*
+   * Darker than the brief's grey. `ink-muted` carries most of the body copy on
+   * this site, and the lighter tone measured 3.97:1 on this ground — under the
+   * 4.5:1 AA floor for normal text. This reads as the same colour and clears it.
+   */
+  --color-ink-muted: #5d5a54;
+  /* The brief's "white" — used for raised panels against the sandy ground. */
+  --color-white: #e1dbd2;
+  --color-forest: #16382c;
+  --color-forest-soft: #235542;
+  --color-gold: #a97f38;
+  /* Also darkened for AA: the label text it sets was 4.49:1 on this ground. */
+  --color-gold-deep: #6f4f16;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Clears the sticky header when jumping to an anchor. */
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Keep the focus ring visible on the emerald and burgundy panels. */
+  .on-dark :focus-visible {
+    outline-color: var(--color-paper);
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-gold) 32%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Barely-there warmth, like light falling across a page. */
+  .paper-wash {
+    background-image:
+      radial-gradient(
+        ellipse 70% 55% at 12% 0%,
+        color-mix(in srgb, var(--color-gold) 12%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 60% at 92% 20%,
+        color-mix(in srgb, var(--color-forest) 9%, transparent),
+        transparent 70%
+      );
+  }
+
+  /* Faint manuscript ruling. */
+  .ruled {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 33px,
+      color-mix(in srgb, var(--color-gold) 22%, transparent) 33px,
+      color-mix(in srgb, var(--color-gold) 22%, transparent) 34px
+    );
+  }
+
+  /* Nastaliq sits low and needs room to breathe. */
+  .urdu {
+    font-family: var(--font-nastaliq);
+    line-height: 2.1;
+  }
+
+  /* ---- Iqbal quote section (src/components/iqbal-quote.tsx) ------------- */
+
+  /*
+   * The mask is declared here rather than only in script, so the couplet is
+   * fully opaque before hydration and stays readable if the script never runs.
+   */
+  .iqbal-glow {
+    mask-image: linear-gradient(to left, black 0%, black 100%);
+    -webkit-mask-image: linear-gradient(to left, black 0%, black 100%);
+    text-shadow: 0 0 22px color-mix(in srgb, var(--color-gold-light) 40%, transparent);
+  }
+
+  .iqbal-star {
+    background-color: var(--color-gold-light);
+    opacity: 0.45;
+    animation: iqbal-twinkle 5s ease-in-out infinite;
+  }
+
+  .iqbal-bird {
+    color: var(--color-paper);
+    animation: iqbal-bob 3s ease-in-out infinite;
+  }
+
+  .iqbal-wing {
+    transform-box: fill-box;
+  }
+
+  .iqbal-wing-l {
+    transform-origin: 100% 100%;
+    animation: iqbal-flap-l 0.7s ease-in-out infinite;
+  }
+
+  .iqbal-wing-r {
+    transform-origin: 0% 100%;
+    animation: iqbal-flap-r 0.7s ease-in-out infinite;
+  }
+
+  @keyframes iqbal-twinkle {
+    0%,
+    100% {
+      opacity: 0.12;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  @keyframes iqbal-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-9px);
+    }
+  }
+
+  @keyframes iqbal-flap-l {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(24deg);
+    }
+  }
+
+  @keyframes iqbal-flap-r {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(-24deg);
+    }
+  }
+
+  /* ---- Heritage map (src/components/heritage-map.tsx) ------------------- */
+
+  /*
+   * Warms the CARTO Positron raster tiles towards the site's palette. The brief
+   * asked for exact land/river/building hexes, which need vector tiles and
+   * therefore an API key — see the note in heritage-map.tsx. This gets the
+   * muted, archival feeling without taking on that dependency.
+   */
+  .heritage-map .leaflet-tile-pane {
+    filter: sepia(0.32) saturate(0.72) brightness(1.02) hue-rotate(-8deg);
+  }
+
+  .heritage-map .leaflet-container {
+    background: var(--color-paper-deep);
+    font-family: var(--font-sans);
+  }
+
+  /* Leaflet's own controls, restyled to stop looking like a web app. */
+  .heritage-map .leaflet-control-attribution {
+    background: color-mix(in srgb, var(--color-paper) 88%, transparent);
+    color: var(--color-ink-muted);
+    font-size: 10px;
+  }
+
+  .heritage-map .leaflet-control-attribution a {
+    color: var(--color-forest);
+  }
+
+  .heritage-map .leaflet-bar a {
+    background: var(--color-paper);
+    border-color: var(--color-rule);
+    color: var(--color-forest);
+  }
+
+  /* One pin design for every location; the panel carries the distinction. */
+  .heritage-pin {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background: #7faf8a;
+    border: 2px solid #3f5f48;
+    box-shadow:
+      0 0 0 3px #f7f9f6,
+      0 4px 10px rgb(47 67 53 / 0.35);
+    transition:
+      transform 200ms ease,
+      background-color 200ms ease;
+  }
+
+  .heritage-pin-wrapper:hover .heritage-pin,
+  .heritage-pin-wrapper:focus-visible .heritage-pin {
+    transform: scale(1.18);
+  }
+
+  .heritage-pin-selected {
+    background: #3f5f48;
+    transform: scale(1.25);
+  }
+}

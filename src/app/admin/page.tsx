@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { AdminPageHeader, Stat } from "@/components/admin/ui";
+import { FormMessage } from "@/components/form";
 import { getDashboardSummary } from "@/lib/admin/queries";
 import { formatEventDateWithYear, formatEventTime } from "@/lib/format";
 
 export const metadata = { title: "Overview" };
 
-export default async function AdminHomePage() {
-  const summary = await getDashboardSummary();
+type PageProps = {
+  searchParams: Promise<{ error?: string }>;
+};
+
+export default async function AdminHomePage({ searchParams }: PageProps) {
+  const [summary, { error }] = await Promise.all([
+    getDashboardSummary(),
+    searchParams,
+  ]);
   const { nextEvent } = summary;
 
   return (
@@ -15,6 +23,17 @@ export default async function AdminHomePage() {
         title="Overview"
         description="Everything the committee can change without touching code."
       />
+
+      {/* Where `requireOwner()` sends an editor who reaches an owner-only page.
+          Without this the redirect would land silently and look like a bug. */}
+      {error === "OwnerOnly" ? (
+        <div className="mb-8">
+          <FormMessage tone="error">
+            That page is for owners only. Ask an owner to make the change, or to
+            make you an owner.
+          </FormMessage>
+        </div>
+      ) : null}
 
       <section className="mb-10">
         <h2 className="mb-4 text-[0.65rem] font-medium tracking-[0.22em] text-ink-muted uppercase">

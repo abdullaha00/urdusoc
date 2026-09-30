@@ -30,7 +30,7 @@ export default async function AdminLayout({
               Committee
             </p>
 
-            <AdminNav />
+            <AdminNav role={admin.role} />
 
             <div className="mt-6 border-t border-rule/70 pt-4">
               <p className="text-xs leading-relaxed break-words text-ink-muted">

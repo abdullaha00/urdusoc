@@ -81,9 +81,15 @@ in at all, so a magic link that reaches a stranger is useless, and the allowlist
 is re-read on every request — removing someone at handover takes effect
 immediately, even if their session cookie is still valid.
 
-There is no screen for editing the allowlist yet. Add or remove committee
-logins directly in the `admins` table (`npm run db:studio`). The `owner` /
-`editor` roles and `requireOwner()` exist in readiness for one.
+The allowlist is edited at `/admin/access`, which is owner-only. Editors can
+change everything the society publishes — events, verses, the roster, the
+gallery — while owners can additionally decide who may sign in. The page
+refuses to remove or demote the last owner, so the committee cannot lock itself
+out of its own site.
+
+Bootstrapping is the one step that needs a shell, because the first owner has
+nobody to add them: set `SEED_ADMIN_EMAIL` and run `npm run db:seed`. Every
+committee member after that is added through `/admin/access`.
 
 ## How it is put together
 
@@ -134,7 +140,6 @@ not discovered by a reader of the live site:
   cites anything. See the warning at the top of `src/lib/heritage.ts`; the
   hedged wording in some entries is deliberate.
 - **`public/su-logo.svg` is a stand-in** for the real Cambridge SU logo.
-- **No allowlist editing screen**, as above.
 
 ## Deployment
 
@@ -142,6 +147,12 @@ Built for Vercel with Neon Postgres and Vercel Blob from the Vercel
 Marketplace. Set the variables in [`.env.example`](.env.example), using Neon's
 **pooled** connection string, then run `npm run db:migrate` and
 `npm run db:seed` once against production.
+
+Set `SEED_ADMIN_EMAIL` for that seed run: it becomes the first owner, and
+without it nobody can sign in. `RESEND_API_KEY` and `EMAIL_FROM` must also be
+set in production, because the sign-in link is an email — unlike locally, where
+it is printed to the terminal. Once that first owner is in, the rest of the
+committee is added at `/admin/access` with no further shell access.
 
 Operational details — which society account owns the domain, the Resend sender,
 the Instagram — live in the committee's private handover notes rather than in

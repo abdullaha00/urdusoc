@@ -13,6 +13,7 @@ import "server-only";
 import { and, asc, count, desc, eq, ne, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
+  admins,
   albums,
   committee,
   committeeCohorts,
@@ -22,6 +23,7 @@ import {
   registrations,
   subscribers,
   verses,
+  type Admin,
   type Album,
   type CommitteeCohort,
   type Event,
@@ -332,4 +334,22 @@ export async function getCommitteeCohorts(): Promise<
 > {
   const rows = await getDb().select().from(committeeCohorts);
   return new Map(rows.map((row) => [row.academicYear, row]));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Access                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The sign-in allowlist, owners first.
+ *
+ * `admins.role` is a Postgres enum declared as ("owner", "editor"), and enums
+ * sort by declaration order, so ascending puts owners at the top without a
+ * CASE expression.
+ */
+export async function listAdmins(): Promise<Admin[]> {
+  return getDb()
+    .select()
+    .from(admins)
+    .orderBy(asc(admins.role), asc(admins.createdAt));
 }

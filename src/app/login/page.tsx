@@ -31,7 +31,13 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
   // Sign-in *is* an email here, so with sending switched off every attempt
   // would fail on submit. Say so up front rather than after a wasted try.
-  if (!env.emailEnabled) {
+  //
+  // Development is the exception: `sendEmail` prints the whole message,
+  // sign-in link included, to the terminal running `npm run dev` precisely so
+  // a committee developer can sign in without an email account. Blocking the
+  // form here made that documented route impossible — see .env.example and the
+  // note on `sendVerificationRequest` in src/auth.ts.
+  if (!env.emailEnabled && process.env.NODE_ENV === "production") {
     return (
       <PageHeader
         label="Committee"
@@ -56,6 +62,16 @@ export default async function LoginPage({ searchParams }: PageProps) {
       intro="Committee members only. We will email you a link — there is no password to lose or hand over."
     >
       <div className="max-w-md">
+        {!env.emailEnabled ? (
+          <div className="mb-6">
+            <FormMessage tone="success">
+              No email is configured, so nothing will be sent: your sign-in
+              link is printed to the terminal running{" "}
+              <code>npm run dev</code>. Open it from there.
+            </FormMessage>
+          </div>
+        ) : null}
+
         {error ? (
           <div className="mb-6">
             <FormMessage tone="error">

@@ -286,9 +286,14 @@ without it nobody can sign in. It must be a University address
 OAuth client's redirect URIs. Once that first owner is in, the rest of the
 committee is added at `/admin/access` with no further shell access.
 
-`vercel.json` declares the cron job that syncs the events spreadsheet daily.
-A Hobby account is limited to one run a day; on Pro, restore the `*/15` the
-sync was written for. Vercel picks it up on the next production deployment and sets
+`vercel.json` declares the cron job that syncs the events spreadsheet, at
+06:00 UTC daily. The sync was written for `*/15 * * * *` and that is the right
+schedule for it — a Hobby account is limited to one run a day, and a deployment
+carrying `*/15` is refused outright. If the society's account ever moves to Pro,
+changing that one line is all it takes. (`vercel.json` takes no comments, which
+is why this is written here instead.)
+
+Vercel picks the job up on the next production deployment and sets
 `CRON_SECRET` itself; the route refuses every request until it does. Cron jobs
 only run against production deployments, so previews never sync - press **Sync
 now** in `/admin/events` if you need a preview to catch up.

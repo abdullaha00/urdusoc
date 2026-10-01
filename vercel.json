@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "_comment": "Daily, at 06:00 UTC. The schedule the sync was written for is */15, and that is what to restore if the society's Vercel account ever moves to Pro — Hobby accounts are limited to one run a day. Until then a change made in the spreadsheet reaches the site the following morning, or immediately if someone presses Sync now in /admin/events.",
       "path": "/api/cron/sync-events",
       "schedule": "0 6 * * *"
     }

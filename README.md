@@ -135,6 +135,13 @@ them in once a day (`vercel.json` → `/api/cron/sync-events`), or immediately
 when someone presses **Sync now** on `/admin/events`. That page
 becomes a read-only view of what the last sync read.
 
+Once a day is the Hobby plan's limit, not a preference. If the committee wants
+an edit on the site within minutes without paying for Pro, the spreadsheet can
+drive the sync itself: `scripts/apps-script/` holds a Google Apps Script that
+adds a **Website** menu to the sheet and an every-five-minutes trigger, calling
+the same endpoint with the same secret. Its README has the two settings it
+needs.
+
 Columns are found by their **heading**, not their position, so the sheet can be
 sorted, reordered, and can carry extra columns of the committee's own. Several
 spellings of each heading are accepted - see `COLUMN_ALIASES` in
@@ -229,6 +236,7 @@ read at `/admin/events/[id]/registrations` as before.
 | `src/lib/queries.ts` | Every read the public pages perform |
 | `src/lib/admin/queries.ts` | Reads for the admin |
 | `src/lib/sheets/` | The events spreadsheet: `client.ts` reads it, `event-row.ts` validates a row, `sync.ts` applies it |
+| `scripts/apps-script/` | Not part of the app: the Apps Script pasted into the spreadsheet, so the sheet can sync itself |
 | `src/lib/content.ts` | Static copy: nav, pillars, membership tiers, term cards, footer |
 | `src/lib/heritage.ts` | The `/history` map locations, as data rather than a table |
 | `src/lib/palette.ts` | Which of the two colour palettes the site renders in - a one-word edit |

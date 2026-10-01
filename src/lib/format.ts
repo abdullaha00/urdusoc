@@ -67,28 +67,45 @@ export function formatEventTime(date: Date): string {
 }
 
 /**
- * The two halves of "7:00 - 9:00 PM", for an event with an end time.
+ * "7 PM", "7:30 PM" - the form the event cards print.
+ *
+ * An hour on the hour drops its zeroes: a term card says "7 PM", and the hero's
+ * date column is only 6.5rem wide. The space before the meridiem is
+ * non-breaking, so "7" and "PM" can never be left on separate lines.
+ */
+export function formatEventTimeCompact(date: Date): string {
+  return formatEventTime(date)
+    .replace(/:00(?= [AP]M$)/, "")
+    .replace(" ", "\u00a0"); // U+00A0, so "7" and "PM" stay together
+}
+
+/**
+ * The two halves of "7–9 PM", for an event with an end time.
  *
  * Returned as a pair rather than one string so each half can carry its own
  * `<time dateTime>`: HTML has no range form, and a single element cannot be
- * honest about two instants.
+ * honest about two instants. Callers join them with an en dash and no spaces -
+ * which is also the only place the pair may be broken across lines.
  *
- * The start's meridiem is dropped when both halves share it. The hero's date
- * column is 6.5rem wide and "7:00 PM - 9:00 PM" wraps in it; an evening that
- * runs past midnight keeps both, which is how it reads anyway.
+ * The start's meridiem is dropped when both halves share it, so an evening
+ * reads "7–9 PM" rather than repeating itself. One that runs past midnight
+ * keeps both: "9 PM–1 AM" is the whole point of printing it.
  */
 export function formatEventTimeRange(
   start: Date,
   end: Date | null,
 ): { start: string; end: string | null } {
-  const startText = formatEventTime(start);
+  const startText = formatEventTimeCompact(start);
   if (!end) return { start: startText, end: null };
 
-  const endText = formatEventTime(end);
-  const meridiem = startText.slice(-2);
+  const endText = formatEventTimeCompact(end);
+  // Three characters: the meridiem and the non-breaking space before it.
+  const meridiem = endText.slice(-3);
 
   return {
-    start: endText.endsWith(meridiem) ? startText.slice(0, -3) : startText,
+    start: startText.endsWith(meridiem)
+      ? startText.slice(0, -meridiem.length)
+      : startText,
     end: endText,
   };
 }

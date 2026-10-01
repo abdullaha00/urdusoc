@@ -110,7 +110,7 @@ function PanelTab({
 }
 
 /**
- * The date column of a programme line: "Fri 23 Oct" over "7:00 - 9:00 PM".
+ * The date column of a programme line: "Fri 23 Oct" over "7–9 PM".
  *
  * The outer element is a plain div rather than a `<time>`, because an end time
  * needs an element of its own - see `formatEventTimeRange`. The date's own
@@ -138,7 +138,7 @@ function EventWhen({ event }: { event: Event }) {
           {time.start}
           {time.end && event.endsAt ? (
             <>
-              {" – "}
+              {"–"}
               <time dateTime={toDateTimeAttribute(event.endsAt)}>
                 {time.end}
               </time>
@@ -183,11 +183,22 @@ function EventProgramme({ events }: { events: Event[] }) {
                     </Urdu>
                   ) : null}
 
+                  {/* Small caps rather than the muted sentence it used to be,
+                      which now reads as the summary's second line. This is the
+                      venue treatment /events already uses. */}
                   {event.venue ? (
-                    <p className="mt-2 text-sm leading-snug text-ink-muted sm:text-[0.95rem]">
+                    <p className="mt-2 text-[0.65rem] tracking-[0.18em] text-ink-muted uppercase">
                       {event.venue}
                     </p>
                   ) : null}
+
+                  {/* Clamped to two lines: the rows divide the card's height
+                      between them, so one 300-character summary must not take
+                      another evening's room. The whole sentence is on /events
+                      and the sheet caps it at 300 characters anyway. */}
+                  <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-muted">
+                    {event.summary}
+                  </p>
                 </div>
               </div>
             </li>

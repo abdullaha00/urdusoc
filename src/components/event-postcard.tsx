@@ -177,7 +177,7 @@ function DateLine({ event, className = "" }: { event: Event; className?: string 
       </time>
       {time?.end && event.endsAt ? (
         <>
-          {" – "}
+          {"–"}
           <time dateTime={toDateTimeAttribute(event.endsAt)}>{time.end}</time>
         </>
       ) : null}

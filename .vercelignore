@@ -1,0 +1,22 @@
+# What `vercel deploy` must not upload.
+#
+# Needed because the CLI uploads the working directory as it finds it and does
+# not read .gitignore. A deployment built from a Git push never sees any of
+# this; a CLI deploy would otherwise spend minutes pushing 189MB of archived
+# Instagram media the build has no use for.
+
+# The archived originals. Local working material for the import scripts, which
+# run from a committee member's machine and never on Vercel. The manifests
+# beside them are small, are committed, and are deliberately not excluded.
+scripts/data/instagram/*.jpg
+scripts/data/instagram/*.mp4
+
+# The raw scrape those were taken from.
+dataset_instagram-scraper_*.json
+
+# Screenshots left at the root. Named one by one rather than as *.png: the
+# site's own images are PNGs too, and public/logo.png holds the space on every
+# event card without a poster.
+/03-events-mobile.png
+/04-events-mobile-scrolled.png
+/05-events-big.png

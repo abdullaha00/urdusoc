@@ -34,7 +34,7 @@ export default function ContactPage() {
       />
 
       <section className="border-b border-rule/70">
-        <div className="mx-auto grid max-w-6xl gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_1fr] lg:gap-20 lg:py-24">
+        <div className="mx-auto grid max-w-6xl gap-12 px-5 py-16 sm:px-8 lg:gap-20 lg:py-24">
           <div>
             <SectionLabel as="h2" className="text-ink-muted">
               Get in touch
@@ -102,7 +102,7 @@ export default function ContactPage() {
             </dl>
           </div>
 
-          <div className="lg:self-center">
+          {/* <div className="lg:self-center">
             <div className="border border-gold/35 bg-paper p-8 shadow-paper sm:p-10">
               <Urdu className="block text-center text-3xl leading-[1.8] text-forest">
                 خدا حافظ
@@ -115,7 +115,7 @@ export default function ContactPage() {
                 protect you&rdquo; than to anything formal.
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
     </>

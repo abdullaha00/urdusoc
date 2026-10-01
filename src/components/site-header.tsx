@@ -124,13 +124,17 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          {pathname !== "/" ? (
-            <div className="hidden lg:block">
-              <ButtonLink href={joinCta.primaryCta.href} className="px-5 py-2.5">
-                {joinCta.primaryCta.label}
-              </ButtonLink>
-            </div>
-          ) : null}
+          {/*
+            Shown on every page, the home page included. The hero repeats this
+            link, so on / the two sit near each other above the fold - but a nav
+            bar whose join button comes and goes reads as a bug, and the mobile
+            menu below never hid it in the first place.
+          */}
+          <div className="hidden lg:block">
+            <ButtonLink href={joinCta.primaryCta.href} className="px-5 py-2.5">
+              {joinCta.primaryCta.label}
+            </ButtonLink>
+          </div>
 
           <button
             type="button"

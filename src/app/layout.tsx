@@ -150,7 +150,13 @@ export default function RootLayout({
       lang="en"
       // Selects the colour palette - see src/lib/palette.ts to switch.
       data-palette={SITE_PALETTE}
-      data-font-theme={process.env.NODE_ENV === "development" ? "A" : "current"}
+      /*
+        The shipped type pairing - Newsreader, Source Sans 3, Gulzar. The
+        alternatives live in globals.css and the dev-only FontThemeSwitcher
+        swaps this attribute to preview them, so this is the one place to edit
+        when a different pairing wins.
+      */
+      data-font-theme="A"
       className={fontVariables}
     >
       <body className="flex min-h-screen flex-col font-sans">

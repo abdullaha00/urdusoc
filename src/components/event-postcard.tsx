@@ -4,7 +4,7 @@ import type { Event } from "@/lib/db/schema";
 import { EVENT_CATEGORIES, collaborationLine } from "@/lib/events";
 import {
   formatEventDateWithYear,
-  formatEventTime,
+  formatEventTimeRange,
   formatPrice,
   toDateAttribute,
   toDateTimeAttribute,
@@ -156,18 +156,32 @@ function PriceNote({
 }
 
 function DateLine({ event, className = "" }: { event: Event; className?: string }) {
+  // `endsAt` without an hour for the start cannot happen - both the sheet and
+  // the admin form refuse it - but the range is gated on `showTime` all the
+  // same, since that is what decides whether this line talks about hours at all.
+  const time = event.showTime
+    ? formatEventTimeRange(event.startsAt, event.endsAt)
+    : null;
+
   return (
-    <time
-      dateTime={
-        event.showTime
-          ? toDateTimeAttribute(event.startsAt)
-          : toDateAttribute(event.startsAt)
-      }
-      className={className}
-    >
-      {formatEventDateWithYear(event.startsAt)}
-      {event.showTime ? ` · ${formatEventTime(event.startsAt)}` : ""}
-    </time>
+    <span className={className}>
+      <time
+        dateTime={
+          event.showTime
+            ? toDateTimeAttribute(event.startsAt)
+            : toDateAttribute(event.startsAt)
+        }
+      >
+        {formatEventDateWithYear(event.startsAt)}
+        {time ? ` · ${time.start}` : ""}
+      </time>
+      {time?.end && event.endsAt ? (
+        <>
+          {" – "}
+          <time dateTime={toDateTimeAttribute(event.endsAt)}>{time.end}</time>
+        </>
+      ) : null}
+    </span>
   );
 }
 

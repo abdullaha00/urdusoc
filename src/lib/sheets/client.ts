@@ -164,9 +164,15 @@ export async function fetchSheetValues(): Promise<string[][]> {
   }
 
   if (response.status === 404) {
+    // The id's length is named because the failure that actually happens is a
+    // stray character travelling with it - a quote kept from a .env line, a
+    // %20 from a copied URL. "That id is 45 characters" is the sentence that
+    // ends the hunt; "no spreadsheet with that id" sends you to look at the
+    // sheet, which is fine.
     throw new UserFacingError(
-      "No spreadsheet with that id. Check EVENTS_SHEET_ID is the id from the " +
-        "sheet's URL, not the whole URL.",
+      `No spreadsheet with the id EVENTS_SHEET_ID holds (${spreadsheetId.length} ` +
+        "characters). It should be the id from the sheet's URL - the part " +
+        "between /d/ and /edit - with no quotes or spaces around it.",
     );
   }
 

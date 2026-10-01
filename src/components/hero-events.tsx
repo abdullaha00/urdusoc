@@ -6,7 +6,7 @@ import { hero } from "@/lib/content";
 import type { Event } from "@/lib/db/schema";
 import {
   formatEventDateShort,
-  formatEventTime,
+  formatEventTimeRange,
   toDateAttribute,
   toDateTimeAttribute,
 } from "@/lib/format";
@@ -109,6 +109,47 @@ function PanelTab({
   );
 }
 
+/**
+ * The date column of a programme line: "Fri 23 Oct" over "7:00 - 9:00 PM".
+ *
+ * The outer element is a plain div rather than a `<time>`, because an end time
+ * needs an element of its own - see `formatEventTimeRange`. The date's own
+ * `<time>` still carries the full start instant when the hour is known.
+ */
+function EventWhen({ event }: { event: Event }) {
+  const time = event.showTime
+    ? formatEventTimeRange(event.startsAt, event.endsAt)
+    : null;
+
+  return (
+    <div className="text-sm leading-snug text-forest sm:text-[0.95rem]">
+      <time
+        dateTime={
+          event.showTime
+            ? toDateTimeAttribute(event.startsAt)
+            : toDateAttribute(event.startsAt)
+        }
+        className="block font-semibold"
+      >
+        {formatEventDateShort(event.startsAt)}
+      </time>
+      {time ? (
+        <span className="mt-1 block text-ink-muted">
+          {time.start}
+          {time.end && event.endsAt ? (
+            <>
+              {" – "}
+              <time dateTime={toDateTimeAttribute(event.endsAt)}>
+                {time.end}
+              </time>
+            </>
+          ) : null}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 function EventProgramme({ events }: { events: Event[] }) {
   return (
     <>
@@ -130,23 +171,7 @@ function EventProgramme({ events }: { events: Event[] }) {
                   (see archive/event-pages/README.md), and "View all events"
                   below is the only place left to go. */}
               <div className="grid h-full content-center gap-3 px-6 py-5 sm:grid-cols-[6.5rem_1fr] sm:items-baseline sm:gap-5 sm:px-9 sm:py-6">
-                <time
-                  dateTime={
-                    event.showTime
-                      ? toDateTimeAttribute(event.startsAt)
-                      : toDateAttribute(event.startsAt)
-                  }
-                  className="text-sm leading-snug text-forest sm:text-[0.95rem]"
-                >
-                  <span className="block font-semibold">
-                    {formatEventDateShort(event.startsAt)}
-                  </span>
-                  {event.showTime ? (
-                    <span className="mt-1 block text-ink-muted">
-                      {formatEventTime(event.startsAt)}
-                    </span>
-                  ) : null}
-                </time>
+                <EventWhen event={event} />
 
                 <div>
                   <h3 className="font-serif text-[1.45rem] leading-[1.08] tracking-tight text-balance sm:text-[1.7rem]">

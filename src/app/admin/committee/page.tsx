@@ -18,16 +18,22 @@ import {
   saveCommitteeCohort,
   startNewYear,
 } from "./actions";
+import { requireAdmin } from "@/lib/auth/guard";
 
 export const metadata = { title: "Committee" };
 
 export default async function AdminCommitteePage() {
+  // Guarded here as well as in the layout: a layout is not re-rendered on
+  // every navigation, so this is what makes removing someone from the
+  // allowlist take effect on the next request rather than the next reload.
+  await requireAdmin();
+
   const [roster, cohorts] = await Promise.all([
     getAdminCommittee(),
     getCommitteeCohorts(),
   ]);
 
-  // Grouped by year, newest first — getAdminCommittee already sorts this way.
+  // Grouped by year, newest first - getAdminCommittee already sorts this way.
   const years = new Map<string, typeof roster>();
   for (const person of roster) {
     const group = years.get(person.academicYear) ?? [];
@@ -93,7 +99,7 @@ export default async function AdminCommitteePage() {
                   </Td>
 
                   <Td className="text-xs break-all text-ink-muted">
-                    {person.email ?? "—"}
+                    {person.email ?? "-"}
                   </Td>
 
                   <Td className="text-right whitespace-nowrap">
@@ -145,7 +151,7 @@ export default async function AdminCommitteePage() {
       {latestYear ? (
         <section className="mt-12 max-w-lg border-t border-rule/70 pt-8">
           <h2 className="text-[0.65rem] font-medium tracking-[0.22em] text-ink-muted uppercase">
-            Handover
+            Start a new year
           </h2>
           <p className="mt-3 mb-4 text-sm leading-relaxed text-ink-muted">
             Copies the {latestYear} roles into a new year with every name reset to
@@ -202,7 +208,7 @@ function CohortEditor({
         {filled ? (
           <Badge tone="good">Set</Badge>
         ) : (
-          <span className="text-ink-muted/70">— none yet</span>
+          <span className="text-ink-muted/70">- none yet</span>
         )}
       </summary>
 
@@ -224,7 +230,7 @@ function CohortEditor({
         <Field
           label="Photo description"
           htmlFor={`cohort-alt-${year}`}
-          hint="Required if there is a photo — without it the photo is dropped rather than published undescribed."
+          hint="Required if there is a photo - without it the photo is dropped rather than published undescribed."
         >
           <Input
             id={`cohort-alt-${year}`}

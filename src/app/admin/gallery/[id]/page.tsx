@@ -14,6 +14,7 @@ import {
 import { env } from "@/lib/env";
 import { deleteAlbum } from "../actions";
 import { deletePhoto, movePhoto, updatePhoto } from "../photo-actions";
+import { requireAdmin } from "@/lib/auth/guard";
 
 export const metadata = { title: "Album" };
 
@@ -22,6 +23,11 @@ export default async function AlbumPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // Guarded here as well as in the layout: a layout is not re-rendered on
+  // every navigation, so this is what makes removing someone from the
+  // allowlist take effect on the next request rather than the next reload.
+  await requireAdmin();
+
   const { id } = await params;
   const album = await getAdminAlbumById(id);
 
@@ -32,7 +38,7 @@ export default async function AlbumPage({
     getEventOptions(),
   ]);
 
-  const blobConfigured = Boolean(env.blobToken);
+  const uploadMode = env.blobUploadMode;
 
   return (
     <>
@@ -41,7 +47,7 @@ export default async function AlbumPage({
         description={
           album.published
             ? "Live in the public gallery."
-            : "Draft — not in the public gallery yet."
+            : "Draft - not in the public gallery yet."
         }
         backHref="/admin/gallery"
         backLabel="Gallery"
@@ -62,21 +68,22 @@ export default async function AlbumPage({
           Photographs
         </h2>
 
-        {blobConfigured ? (
+        {uploadMode ? (
           <div className="mb-6 max-w-2xl">
-            <PhotoUploader albumId={album.id} />
+            <PhotoUploader albumId={album.id} uploadMode={uploadMode} />
           </div>
         ) : (
           <div className="mb-6 max-w-2xl rounded-sm border border-gold/30 bg-gold/5 px-4 py-3 text-sm leading-relaxed text-gold-deep">
-            Photograph uploads need a Vercel Blob store. Create one and set{" "}
-            <code className="font-mono text-xs">BLOB_READ_WRITE_TOKEN</code>, then
-            this becomes an upload box. Until then the album shows its motif.
+            Photograph uploads need a connected Vercel Blob store with OIDC,
+            or a legacy{" "}
+            <code className="font-mono text-xs">BLOB_READ_WRITE_TOKEN</code>.
+            Until then the album shows its motif.
           </div>
         )}
 
         {photos.length === 0 ? (
           <EmptyState>
-            No photographs yet — the album shows its “{album.motif}” motif on the
+            No photographs yet - the album shows its “{album.motif}” motif on the
             public site.
           </EmptyState>
         ) : (

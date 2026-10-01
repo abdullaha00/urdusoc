@@ -59,30 +59,11 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
                 </p>
               </div>
 
-              <Link
-                href={`/admin/events/${nextEvent.id}/registrations`}
-                className="text-sm font-medium text-forest underline decoration-forest/30 underline-offset-4 hover:decoration-forest"
-              >
-                Door list →
-              </Link>
             </div>
 
-            <p className="mt-4 text-sm text-ink-muted">
-              {nextEvent.ticketing === "none" ? (
-                "No booking needed for this one."
-              ) : (
-                <>
-                  <span className="font-medium text-ink">
-                    {nextEvent.seatsTaken}
-                  </span>{" "}
-                  {nextEvent.seatsTaken === 1 ? "place" : "places"} booked
-                  {nextEvent.capacity !== null
-                    ? ` of ${nextEvent.capacity}`
-                    : " — uncapped"}
-                  {!nextEvent.published ? " · not published yet" : null}
-                </>
-              )}
-            </p>
+            {!nextEvent.published ? (
+              <p className="mt-4 text-sm text-ink-muted">Not published yet.</p>
+            ) : null}
           </div>
         ) : (
           <div className="rounded-sm border border-dashed border-rule px-6 py-10 text-center text-sm text-ink-muted">
@@ -104,22 +85,6 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Stat
-            label="Members"
-            value={summary.activeMembers}
-            hint="Active — the number the SU asks for."
-            href="/admin/members"
-          />
-          <Stat
-            label="Mailing list"
-            value={summary.confirmedSubscribers}
-            hint={
-              summary.pendingSubscribers > 0
-                ? `${summary.pendingSubscribers} awaiting confirmation`
-                : "All confirmed."
-            }
-            href="/admin/subscribers"
-          />
           <Stat
             label="Unpublished events"
             value={summary.draftEvents}

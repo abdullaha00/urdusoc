@@ -9,10 +9,16 @@ import { DangerConfirm } from "@/components/admin/danger-confirm";
 import { Urdu } from "@/components/ui";
 import { getAdminVerses } from "@/lib/admin/queries";
 import { deleteVerse, setFeaturedVerse } from "./actions";
+import { requireAdmin } from "@/lib/auth/guard";
 
 export const metadata = { title: "Verses" };
 
 export default async function AdminVersesPage() {
+  // Guarded here as well as in the layout: a layout is not re-rendered on
+  // every navigation, so this is what makes removing someone from the
+  // allowlist take effect on the next request rather than the next reload.
+  await requireAdmin();
+
   const verses = await getAdminVerses();
   const featured = verses.find((verse) => verse.featured);
 
@@ -51,7 +57,7 @@ export default async function AdminVersesPage() {
                     {verse.transliterationLines.join(" · ")}
                   </p>
 
-                  <p className="mt-2 max-w-xl text-sm leading-relaxed">
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed whitespace-pre-line">
                     {verse.translation}
                   </p>
 

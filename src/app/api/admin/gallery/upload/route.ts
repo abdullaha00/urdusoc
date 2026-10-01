@@ -1,43 +1,99 @@
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { issueSignedToken } from "@vercel/blob";
+import {
+  handleUpload,
+  handleUploadPresigned,
+  type HandleUploadBody,
+  type HandleUploadPresignedBody,
+} from "@vercel/blob/client";
 import { getAdminAlbumById } from "@/lib/admin/queries";
 import { getCurrentAdmin } from "@/lib/auth/guard";
+import { env } from "@/lib/env";
 
-/** 12MB — comfortably above a phone photo, well below anything pathological. */
+/** 12MB - comfortably above a phone photo, well below anything pathological. */
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 
 const ALLOWED_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+async function authoriseAlbum(clientPayload: string | null) {
+  const admin = await getCurrentAdmin();
+  if (!admin) throw new Error("Not authorised to upload.");
+
+  const album = clientPayload
+    ? await getAdminAlbumById(clientPayload)
+    : null;
+  if (!album) throw new Error("No such album.");
+  return album;
+}
+
 /**
- * Issues a short-lived token so the browser can upload straight to Blob storage.
+ * Delegates gallery uploads straight from the browser to Vercel Blob.
  *
- * The bytes never pass through a server action: those cap request bodies at 1MB
- * by default, which no photograph respects. Raising that limit would push whole
- * images through the function instead, so the upload is delegated and only the
- * resulting URL comes back to us.
- *
- * This route sits outside `/admin`, so `proxy.ts` does not cover it — the
- * authorization below is the only thing guarding it, which is why it is done
- * before a token is minted rather than after.
+ * Project OIDC uses a short-lived signed delegation and presigned URL. A
+ * legacy read/write token remains supported for projects that already use one.
+ * Both paths authenticate the admin and constrain the file before authorising
+ * any upload.
  */
 export async function POST(request: Request): Promise<Response> {
-  const body = (await request.json()) as HandleUploadBody;
+  const body = (await request.json()) as
+    | HandleUploadBody
+    | HandleUploadPresignedBody;
 
   try {
+    if (body.type === "blob.generate-presigned-url") {
+      if (env.blobUploadMode !== "presigned") {
+        throw new Error("Presigned Blob uploads are not configured.");
+      }
+
+      const result = await handleUploadPresigned({
+        body,
+        request,
+        webhookPublicKey: env.blobWebhookPublicKey,
+        getSignedToken: async (pathname, clientPayload) => {
+          const album = await authoriseAlbum(clientPayload);
+          if (!pathname.startsWith(`gallery/${album.id}/`)) {
+            throw new Error("Upload path does not match the album.");
+          }
+
+          const validUntil = Date.now() + 10 * 60 * 1000;
+          return {
+            token: await issueSignedToken({
+              pathname,
+              operations: ["put"],
+              allowedContentTypes: ALLOWED_CONTENT_TYPES,
+              maximumSizeInBytes: MAX_UPLOAD_BYTES,
+              validUntil,
+            }),
+            urlOptions: {
+              addRandomSuffix: true,
+              allowOverwrite: false,
+              validUntil,
+            },
+          };
+        },
+      });
+
+      return Response.json(result);
+    }
+
+    if (body.type !== "blob.generate-client-token") {
+      throw new Error("Unsupported Blob upload request.");
+    }
+    if (env.blobUploadMode !== "legacy") {
+      throw new Error("Legacy Blob uploads are not configured.");
+    }
+
     const result = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async (_pathname, clientPayload) => {
-        const admin = await getCurrentAdmin();
-        if (!admin) {
-          throw new Error("Not authorised to upload.");
-        }
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
+        const album = await authoriseAlbum(clientPayload);
 
-        // The album is passed as the client payload; check it exists so a token
-        // cannot be minted for an arbitrary path.
-        const albumId = clientPayload ?? "";
-        const album = albumId ? await getAdminAlbumById(albumId) : null;
-        if (!album) {
-          throw new Error("No such album.");
+        // The same check the presigned branch makes. The browser chooses the
+        // pathname, so without this an admin's page could be made to write
+        // anywhere in the store — committee portraits, album covers — rather
+        // than only into the album it is uploading to.
+        if (!pathname.startsWith(`gallery/${album.id}/`)) {
+          throw new Error("Upload path does not match the album.");
         }
 
         return {
@@ -47,10 +103,8 @@ export async function POST(request: Request): Promise<Response> {
           tokenPayload: album.id,
         };
       },
-      // Deliberately no `onUploadCompleted`: Vercel calls it from outside, so it
-      // never fires against localhost and the photo row would never appear in
-      // local development. The row is written by the `addPhoto` action instead,
-      // once the browser has the URL.
+      // No completion callback: it cannot reach localhost. addPhoto writes the
+      // row once the browser has the uploaded URL.
     });
 
     return Response.json(result);

@@ -3,31 +3,30 @@
  *
  * Deliberately separate from `src/lib/queries.ts`: those filter to published
  * rows because they serve the public site. These must show drafts too, so the
- * committee can see what they have not released yet. Keep the two apart — a
+ * committee can see what they have not released yet. Keep the two apart - a
  * `published` filter quietly added here would hide drafts from their authors,
  * and one removed there would leak them to visitors.
  */
 
 import "server-only";
 
-import { and, asc, count, desc, eq, ne, sql } from "drizzle-orm";
+import { asc, count, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   admins,
   albums,
   committee,
   committeeCohorts,
+  eventSyncRuns,
   events,
-  members,
   photos,
   registrations,
-  subscribers,
   verses,
   type Admin,
   type Album,
   type CommitteeCohort,
   type Event,
-  type Registration,
+  type EventSyncRun,
 } from "@/lib/db/schema";
 
 /** Seats claimed by everyone who has not cancelled. */
@@ -75,15 +74,21 @@ export async function getAdminEventWithSeats(
   return row ? { ...row.event, seatsTaken: row.seatsTaken } : null;
 }
 
-/** The door list: everyone booked, in the order they booked. */
-export async function getRegistrations(
-  eventId: string,
-): Promise<Registration[]> {
-  return getDb()
+/**
+ * The most recent run of the Google Sheet sync, for the panel on /admin/events.
+ *
+ * Null before the first run has happened - a freshly deployed site, or one
+ * where the sheet was only just connected. The panel says so rather than
+ * implying the sync is broken.
+ */
+export async function getLatestSyncRun(): Promise<EventSyncRun | null> {
+  const [run] = await getDb()
     .select()
-    .from(registrations)
-    .where(eq(registrations.eventId, eventId))
-    .orderBy(asc(registrations.createdAt));
+    .from(eventSyncRuns)
+    .orderBy(desc(eventSyncRuns.startedAt))
+    .limit(1);
+
+  return run ?? null;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -169,105 +174,21 @@ export async function getEventOptions() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* People                                                                      */
-/* -------------------------------------------------------------------------- */
-
-export type MemberFilters = {
-  /** Matched against name, email and CRSid. */
-  q?: string;
-  status?: string;
-  type?: string;
-};
-
-/**
- * Filtering happens in SQL rather than in the page.
- *
- * A society this size would survive filtering in JavaScript, but the export
- * routes share these functions and a CSV that silently differs from the list
- * on screen would be worse than a slow one.
- */
-export async function getMembers(filters: MemberFilters = {}) {
-  const conditions = [];
-
-  if (filters.q) {
-    const pattern = `%${filters.q.trim().toLowerCase()}%`;
-    conditions.push(
-      sql`(lower(${members.name}) like ${pattern} or lower(${members.email}) like ${pattern} or lower(coalesce(${members.crsid}, '')) like ${pattern})`,
-    );
-  }
-  if (filters.status) {
-    conditions.push(sql`${members.status}::text = ${filters.status}`);
-  }
-  if (filters.type) {
-    conditions.push(sql`${members.type}::text = ${filters.type}`);
-  }
-
-  return getDb()
-    .select()
-    .from(members)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(members.createdAt));
-}
-
-export type SubscriberFilters = { q?: string; status?: string };
-
-export async function getSubscribers(filters: SubscriberFilters = {}) {
-  const conditions = [];
-
-  if (filters.q) {
-    const pattern = `%${filters.q.trim().toLowerCase()}%`;
-    conditions.push(sql`lower(${subscribers.email}) like ${pattern}`);
-  }
-  if (filters.status) {
-    conditions.push(sql`${subscribers.status}::text = ${filters.status}`);
-  }
-
-  return getDb()
-    .select()
-    .from(subscribers)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(subscribers.createdAt));
-}
-
-/** Totals across the whole table, regardless of the current filter. */
-export async function getMemberTotals() {
-  const rows = await getDb()
-    .select({ status: members.status, value: count() })
-    .from(members)
-    .groupBy(members.status);
-
-  const totals = { active: 0, pending: 0, expired: 0, all: 0 };
-  for (const row of rows) {
-    totals[row.status] = row.value;
-    totals.all += row.value;
-  }
-  return totals;
-}
-
-export async function getSubscriberTotals() {
-  const rows = await getDb()
-    .select({ status: subscribers.status, value: count() })
-    .from(subscribers)
-    .groupBy(subscribers.status);
-
-  const totals = { pending: 0, confirmed: 0, unsubscribed: 0, all: 0 };
-  for (const row of rows) {
-    totals[row.status] = row.value;
-    totals.all += row.value;
-  }
-  return totals;
-}
-
-/* -------------------------------------------------------------------------- */
 /* Dashboard                                                                   */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * What the overview counts.
+ *
+ * Members and the mailing list used to be here. They went when their admin
+ * pages did: the join and RSVP flows are archived (see archive/), nothing on
+ * the site collects an address, and a dashboard counting rows nobody can add is
+ * a number going quietly stale. The tables themselves are untouched, and the
+ * queries that fed those pages are a `git revert` away if the flows come back.
+ */
 export type DashboardSummary = {
   nextEvent: AdminEvent | null;
   draftEvents: number;
-  activeMembers: number;
-  confirmedSubscribers: number;
-  pendingSubscribers: number;
   unpublishedAlbums: number;
   verseCount: number;
 };
@@ -275,57 +196,28 @@ export type DashboardSummary = {
 export async function getDashboardSummary(): Promise<DashboardSummary> {
   const db = getDb();
 
-  const [nextEventRows, drafts, membersActive, subsConfirmed, subsPending, albumsDraft, versesAll] =
-    await Promise.all([
-      db
-        .select({ event: events, seatsTaken: seatsTakenSql })
-        .from(events)
-        .leftJoin(registrations, eq(registrations.eventId, events.id))
-        .where(sql`${events.startsAt} >= now()`)
-        .groupBy(events.id)
-        .orderBy(asc(events.startsAt))
-        .limit(1),
-      db.select({ value: count() }).from(events).where(eq(events.published, false)),
-      db.select({ value: count() }).from(members).where(eq(members.status, "active")),
-      db
-        .select({ value: count() })
-        .from(subscribers)
-        .where(eq(subscribers.status, "confirmed")),
-      db
-        .select({ value: count() })
-        .from(subscribers)
-        .where(eq(subscribers.status, "pending")),
-      db.select({ value: count() }).from(albums).where(eq(albums.published, false)),
-      db.select({ value: count() }).from(verses),
-    ]);
+  const [nextEventRows, drafts, albumsDraft, versesAll] = await Promise.all([
+    db
+      .select({ event: events, seatsTaken: seatsTakenSql })
+      .from(events)
+      .leftJoin(registrations, eq(registrations.eventId, events.id))
+      .where(sql`${events.startsAt} >= now()`)
+      .groupBy(events.id)
+      .orderBy(asc(events.startsAt))
+      .limit(1),
+    db.select({ value: count() }).from(events).where(eq(events.published, false)),
+    db.select({ value: count() }).from(albums).where(eq(albums.published, false)),
+    db.select({ value: count() }).from(verses),
+  ]);
 
   const first = nextEventRows[0];
 
   return {
     nextEvent: first ? { ...first.event, seatsTaken: first.seatsTaken } : null,
     draftEvents: drafts[0]?.value ?? 0,
-    activeMembers: membersActive[0]?.value ?? 0,
-    confirmedSubscribers: subsConfirmed[0]?.value ?? 0,
-    pendingSubscribers: subsPending[0]?.value ?? 0,
     unpublishedAlbums: albumsDraft[0]?.value ?? 0,
     verseCount: versesAll[0]?.value ?? 0,
   };
-}
-
-/** Bookings that are neither cancelled nor yet checked in, for the door list. */
-export async function getOutstandingCount(eventId: string): Promise<number> {
-  const [row] = await getDb()
-    .select({ value: count() })
-    .from(registrations)
-    .where(
-      and(
-        eq(registrations.eventId, eventId),
-        ne(registrations.status, "cancelled"),
-        sql`${registrations.checkedInAt} is null`,
-      ),
-    );
-
-  return row?.value ?? 0;
 }
 
 /** Every year's group photo and note, keyed by academic year. */

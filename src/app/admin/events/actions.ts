@@ -12,6 +12,7 @@ import {
   registrations,
   ticketingModeEnum,
 } from "@/lib/db/schema";
+import { env } from "@/lib/env";
 import { isUniqueViolation, reportUnexpected } from "@/lib/errors";
 import { parseLondonDateTime } from "@/lib/format";
 import { slugify } from "@/lib/slug";
@@ -114,6 +115,28 @@ const eventSchema = z
       ),
     posterUrl: z.string().trim().max(500).optional().transform((v) => v || null),
     posterAlt: z.string().trim().max(300).optional().transform((v) => v || null),
+    instagramUrl: z
+      .string()
+      .trim()
+      .max(500)
+      .optional()
+      .transform((value, ctx) => {
+        if (!value) return null;
+        try {
+          const url = new URL(value);
+          if (!["instagram.com", "www.instagram.com"].includes(url.hostname)) {
+            ctx.addIssue({
+              code: "custom",
+              message: "Use the post's own Instagram link.",
+            });
+            return z.NEVER;
+          }
+          return url.toString();
+        } catch {
+          ctx.addIssue({ code: "custom", message: "Enter a valid URL." });
+          return z.NEVER;
+        }
+      }),
     published: z.boolean(),
   })
   .refine(
@@ -126,6 +149,25 @@ const eventSchema = z
     message: "Describe the poster so it is not lost to screen readers.",
     path: ["posterAlt"],
   });
+
+/**
+ * True when the spreadsheet owns this event.
+ *
+ * Checked on the server in every write action, not just hidden in the UI. The
+ * admin pages stop offering these controls for sheet-owned rows, but a stale
+ * tab or a hand-made request would otherwise still get through - and the edit
+ * would survive only until the next sync overwrote it, which looks exactly
+ * like the site losing someone's work.
+ */
+async function isSheetOwned(id: string): Promise<boolean> {
+  const [row] = await getDb()
+    .select({ key: events.sheetRowKey })
+    .from(events)
+    .where(eq(events.id, id))
+    .limit(1);
+
+  return Boolean(row?.key);
+}
 
 function collectFieldErrors(error: z.ZodError): Record<string, string> {
   const fieldErrors: Record<string, string> = {};
@@ -159,7 +201,7 @@ export async function saveEvent(
     startsAt: formData.get("startsAt"),
     endsAt: formData.get("endsAt") ?? undefined,
     venue: formData.get("venue") ?? undefined,
-    // The checkbox asks the inverse — ticking it means the hour is not settled.
+    // The checkbox asks the inverse - ticking it means the hour is not settled.
     showTime: formData.get("timeTbc") !== "on",
     capacity: formData.get("capacity") ?? undefined,
     ticketing: formData.get("ticketing"),
@@ -170,6 +212,7 @@ export async function saveEvent(
     priority: formData.get("priority") ?? undefined,
     posterUrl: formData.get("posterUrl") ?? undefined,
     posterAlt: formData.get("posterAlt") ?? undefined,
+    instagramUrl: formData.get("instagramUrl") ?? undefined,
     published: formData.get("published") === "on",
   });
 
@@ -184,7 +227,26 @@ export async function saveEvent(
   const id = String(formData.get("id") ?? "").trim();
   const data = parsed.data;
 
-  // Paid ticketing has no payment provider behind it — there is no `stripe`
+  if (id && (await isSheetOwned(id))) {
+    return {
+      status: "error",
+      message:
+        "This event comes from the committee spreadsheet. Change its row there - " +
+        "anything saved here would be overwritten by the next sync.",
+    };
+  }
+
+  // A new event entered here while the sheet is connected would never be
+  // synced, and would sit outside the one place the committee is told to look.
+  if (!id && env.eventsSheetEnabled) {
+    return {
+      status: "error",
+      message:
+        "New events are added as a row in the committee spreadsheet, not here.",
+    };
+  }
+
+  // Paid ticketing has no payment provider behind it - there is no `stripe`
   // dependency, and the join form already refuses paid tiers. Accepting it here
   // would list an event people cannot actually pay for.
   if (data.ticketing === "paid") {
@@ -220,6 +282,7 @@ export async function saveEvent(
     priority: data.featured ? data.priority : 0,
     posterUrl: data.posterUrl,
     posterAlt: data.posterUrl ? data.posterAlt : null,
+    instagramUrl: data.instagramUrl,
     published: data.published,
     updatedAt: new Date(),
   };
@@ -235,7 +298,7 @@ export async function saveEvent(
       return {
         status: "error",
         message: "Another event already uses that web address.",
-        fieldErrors: { slug: "Already taken — try a different one." },
+        fieldErrors: { slug: "Already taken - try a different one." },
       };
     }
     return { status: "error", message: reportUnexpected("Save event failed", error) };
@@ -250,6 +313,11 @@ export async function toggleEventPublished(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
+  // The sheet's Published column decides this for the rows it owns.
+  if (await isSheetOwned(id)) {
+    redirect("/admin/events?error=sheet-owned");
+  }
+
   await getDb()
     .update(events)
     .set({ published: sql`not ${events.published}`, updatedAt: new Date() })
@@ -259,7 +327,7 @@ export async function toggleEventPublished(formData: FormData): Promise<void> {
 }
 
 /**
- * Deletes an event — but never one that people have booked onto.
+ * Deletes an event - but never one that people have booked onto.
  *
  * `registrations.eventId` cascades on delete, so removing an event with
  * bookings would silently destroy the door list. Unpublishing is the reversible
@@ -270,6 +338,12 @@ export async function deleteEvent(formData: FormData): Promise<void> {
 
   const id = String(formData.get("id") ?? "");
   if (!id) return;
+
+  // Deleting a sheet-owned event would achieve nothing: its row is still in
+  // the spreadsheet, so the next sync would put it straight back.
+  if (await isSheetOwned(id)) {
+    redirect("/admin/events?error=sheet-owned");
+  }
 
   const db = getDb();
 
@@ -287,62 +361,4 @@ export async function deleteEvent(formData: FormData): Promise<void> {
   await db.delete(events).where(eq(events.id, id));
 
   redirect("/admin/events");
-}
-
-/* -------------------------------------------------------------------------- */
-/* Door list                                                                   */
-/* -------------------------------------------------------------------------- */
-
-/** Toggles someone in or out of "checked in" at the door. */
-export async function toggleCheckIn(formData: FormData): Promise<void> {
-  await requireAdmin();
-
-  const registrationId = String(formData.get("registrationId") ?? "");
-  const eventId = String(formData.get("eventId") ?? "");
-  if (!registrationId || !eventId) return;
-
-  await getDb()
-    .update(registrations)
-    .set({
-      checkedInAt: sql`case when ${registrations.checkedInAt} is null then now() else null end`,
-      status: sql`case when ${registrations.checkedInAt} is null then 'checked_in'::registration_status else 'reserved'::registration_status end`,
-    })
-    .where(eq(registrations.id, registrationId));
-
-  redirect(`/admin/events/${eventId}/registrations`);
-}
-
-/** Cancels a booking, freeing the seats for someone else. */
-export async function cancelRegistration(formData: FormData): Promise<void> {
-  await requireAdmin();
-
-  const registrationId = String(formData.get("registrationId") ?? "");
-  const eventId = String(formData.get("eventId") ?? "");
-  if (!registrationId || !eventId) return;
-
-  await getDb()
-    .update(registrations)
-    .set({ status: "cancelled", checkedInAt: null })
-    .where(eq(registrations.id, registrationId));
-
-  redirect(`/admin/events/${eventId}/registrations`);
-}
-
-/**
- * Erases a booking outright, for a "delete my data" request.
- *
- * Cancelling keeps the row (and the person's name and email) on the door list.
- * The privacy policy promises actual erasure on request, so this is the action
- * that honours it.
- */
-export async function eraseRegistration(formData: FormData): Promise<void> {
-  await requireAdmin();
-
-  const registrationId = String(formData.get("registrationId") ?? "");
-  const eventId = String(formData.get("eventId") ?? "");
-  if (!registrationId || !eventId) return;
-
-  await getDb().delete(registrations).where(eq(registrations.id, registrationId));
-
-  redirect(`/admin/events/${eventId}/registrations`);
 }

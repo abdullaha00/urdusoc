@@ -1,10 +1,16 @@
 import { AdminPageHeader } from "@/components/admin/ui";
 import { CommitteeForm } from "@/components/admin/committee-form";
 import { getAdminCommittee } from "@/lib/admin/queries";
+import { requireAdmin } from "@/lib/auth/guard";
 
 export const metadata = { title: "Add committee member" };
 
 export default async function NewCommitteeMemberPage() {
+  // Guarded here as well as in the layout: a layout is not re-rendered on
+  // every navigation, so this is what makes removing someone from the
+  // allowlist take effect on the next request rather than the next reload.
+  await requireAdmin();
+
   // Default to the most recent year so adding to the sitting committee is one
   // less thing to type.
   const roster = await getAdminCommittee();
@@ -14,7 +20,7 @@ export default async function NewCommitteeMemberPage() {
     <>
       <AdminPageHeader
         title="Add committee member"
-        description="Roles without a name yet are fine — put “To be announced” in."
+        description="Roles without a name yet are fine - put “To be announced” in."
         backHref="/admin/committee"
         backLabel="Committee"
       />

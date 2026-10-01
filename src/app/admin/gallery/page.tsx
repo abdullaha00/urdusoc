@@ -11,10 +11,16 @@ import {
 import { getAdminAlbums } from "@/lib/admin/queries";
 import { formatMonthYear } from "@/lib/format";
 import { toggleAlbumPublished } from "./actions";
+import { requireAdmin } from "@/lib/auth/guard";
 
 export const metadata = { title: "Gallery" };
 
 export default async function AdminGalleryPage() {
+  // Guarded here as well as in the layout: a layout is not re-rendered on
+  // every navigation, so this is what makes removing someone from the
+  // allowlist take effect on the next request rather than the next reload.
+  await requireAdmin();
+
   const albums = await getAdminAlbums();
 
   return (
@@ -56,13 +62,13 @@ export default async function AdminGalleryPage() {
               </Td>
 
               <Td className="whitespace-nowrap text-ink-muted">
-                {album.takenOn ? formatMonthYear(album.takenOn) : "—"}
+                {album.takenOn ? formatMonthYear(album.takenOn) : "-"}
               </Td>
 
               <Td>
                 {album.photoCount === 0 ? (
                   <span className="text-ink-muted">
-                    None — showing {album.motif ?? "motif"}
+                    None - showing {album.motif ?? "motif"}
                   </span>
                 ) : (
                   album.photoCount

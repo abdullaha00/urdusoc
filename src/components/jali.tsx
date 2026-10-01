@@ -1,13 +1,13 @@
 /**
- * The jali visual system — a pierced-screen lattice and a cusped arch.
+ * The jali visual system - a pierced-screen lattice and a cusped arch.
  *
  * Drawn as original SVG geometry rather than tracing the reference photograph
  * the 2026 committee supplied. That photograph is deliberately not in the repo
- * — see the note in .gitignore. The 17th-century screen it showed is long out
+ * - see the note in .gitignore. The 17th-century screen it showed is long out
  * of copyright, but the photograph of it is a separate work with its own
  * rights, and we hold no licence for it. Constructing the pattern from scratch
  * also costs a couple of kilobytes instead of 1.8 MB, scales to any size, and
- * picks up the palette tokens — so it follows the brief's own "SVG or flex
+ * picks up the palette tokens - so it follows the brief's own "SVG or flex
  * container graphic" rule into the bargain.
  *
  * The geometry is the overlapping-circle lattice common to Mughal jali work:
@@ -18,7 +18,7 @@
 
 /**
  * Lattice tile. Circles sit every half-tile so the pattern repeats seamlessly
- * on all four edges — the radius equals the spacing, which is what makes
+ * on all four edges - the radius equals the spacing, which is what makes
  * neighbouring circles cross at the petal points.
  */
 const TILE = 32;
@@ -78,7 +78,7 @@ export function JaliScreen({
  *
  * The opening is a semicircle of radius `width / 2`; the scallops are arcs
  * strung between evenly spaced points on it, each bulging back towards the
- * centre so the cusps point inward — the profile in the reference screen.
+ * centre so the cusps point inward - the profile in the reference screen.
  *
  * Returned as a single closed path so it can be used both as a stroke and as a
  * clip path.
@@ -86,7 +86,7 @@ export function JaliScreen({
 function archPath(width: number, height: number, lobes: number): string {
   const radius = width / 2;
   const centreX = width / 2;
-  // Where the arch springs from — the straight jambs run below this line.
+  // Where the arch springs from - the straight jambs run below this line.
   const springY = height - radius * 0.55;
 
   const pointAt = (index: number) => {
@@ -130,13 +130,13 @@ const ARCH_PATH = archPath(ARCH_WIDTH, ARCH_HEIGHT, 9);
  *
  * Scales with its container and is anchored to the top, so on a narrow screen
  * it crops from the bottom rather than shrinking away from the heading or
- * overlapping it — the failure the brief specifically called out.
+ * overlapping it - the failure the brief specifically called out.
  *
  * The whole thing dissolves downwards. A masthead's heading and standfirst sit
  * inside the opening, and at full strength the lattice ran straight through
  * them: dense one-pixel circles behind body copy is exactly the texture that
- * makes small text hard to read. Fading it out above the copy keeps the crown —
- * the part that actually reads as an arch — and hands the text clean paper.
+ * makes small text hard to read. Fading it out above the copy keeps the crown -
+ * the part that actually reads as an arch - and hands the text clean paper.
  */
 export function JaliArch({ className = "" }: { className?: string }) {
   return (

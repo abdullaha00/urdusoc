@@ -152,10 +152,10 @@ export async function deleteCommitteeMember(formData: FormData): Promise<void> {
 }
 
 /**
- * Handover: copies this year's roles into a new year with the names cleared.
+ * Copies this year's roles into a new year with the names cleared.
  *
  * The roles rarely change between committees but the people always do, so the
- * roles are kept and each name is reset to the seed's "To be announced" — which
+ * roles are kept and each name is reset to the seed's "To be announced" - which
  * is what /committee already renders gracefully.
  */
 export async function startNewYear(formData: FormData): Promise<void> {
@@ -174,7 +174,7 @@ export async function startNewYear(formData: FormData): Promise<void> {
       .where(eq(committee.academicYear, newYear))
       .limit(1);
 
-    // Already started — don't duplicate the roster on a double submit.
+    // Already started - don't duplicate the roster on a double submit.
     if (existing.length > 0) return;
 
     const previous = await tx
@@ -217,7 +217,7 @@ export async function startNewYear(formData: FormData): Promise<void> {
  * Saves the group photo and note for one academic year.
  *
  * Upserts on `academic_year`, so a year needs no cohort row until someone
- * actually fills one in — the archive on /committee renders from the roster
+ * actually fills one in - the archive on /committee renders from the roster
  * alone when there is nothing here.
  */
 export async function saveCommitteeCohort(formData: FormData): Promise<void> {
@@ -232,7 +232,7 @@ export async function saveCommitteeCohort(formData: FormData): Promise<void> {
 
   // A photo with no description is unreachable for anyone using a screen
   // reader. Rather than reject the whole save, drop the photo and keep the
-  // note — the page then falls back to the roster, which is never wrong.
+  // note - the page then falls back to the roster, which is never wrong.
   const keepPhoto = photoUrl !== null && photoAlt !== null;
 
   const values = {

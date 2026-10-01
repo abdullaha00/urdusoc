@@ -81,7 +81,7 @@ export function ButtonLink({
   href: string;
   variant?: keyof typeof buttonVariants;
   className?: string;
-  /** Only usable from client components — e.g. closing the mobile menu. */
+  /** Only usable from client components - e.g. closing the mobile menu. */
   onClick?: () => void;
   children: ReactNode;
 }) {
@@ -148,20 +148,18 @@ export function ArrowLink({
 }
 
 /**
- * Masthead for interior pages, echoing the hero's eyebrow + serif title rhythm.
+ * Masthead for interior pages, with the title as the first visible content.
  *
  * The jali arch is anchored to the top-left of the text column rather than the
  * page centre, so the heading sits inside the opening at every width instead of
  * drifting out of it on wide screens.
  */
 export function PageHeader({
-  label,
   title,
   titleUrdu,
   intro,
   children,
 }: {
-  label: string;
   title: string;
   titleUrdu?: string;
   intro?: string;
@@ -175,8 +173,6 @@ export function PageHeader({
         <JaliArch className="-top-10 left-0 h-[24rem] w-[22rem] text-forest sm:h-[28rem] sm:w-[27rem]" />
 
         <div className="relative">
-          <SectionLabel className="text-ink-muted">{label}</SectionLabel>
-
           {titleUrdu ? (
             <Urdu className="mt-6 inline-block text-3xl leading-[1.6] text-forest sm:text-4xl">
               {titleUrdu}
@@ -184,7 +180,7 @@ export function PageHeader({
           ) : null}
 
           <h1
-            className={`${titleUrdu ? "mt-2" : "mt-7"} max-w-3xl font-serif text-4xl leading-[1.1] tracking-tight text-balance sm:text-5xl`}
+            className={`${titleUrdu ? "mt-2" : ""} max-w-3xl font-serif text-4xl leading-[1.1] tracking-tight text-balance sm:text-5xl`}
           >
             {title}
           </h1>

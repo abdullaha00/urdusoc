@@ -1,23 +1,21 @@
 import type { Metadata } from "next";
 import { HeritageMapLoader } from "@/components/heritage-map-loader";
-import { JoinCta } from "@/components/join-cta";
 import { PageHeader, SectionLabel } from "@/components/ui";
 import { HERITAGE_LOCATIONS } from "@/lib/heritage";
 
 export const metadata: Metadata = {
   title: "Urdu in Cambridge",
   description:
-    "An exhibition map of the places in Cambridge with a thread to Urdu literary history — Iqbal at Trinity, Rahmat Ali at Emmanuel, and the streets in between.",
+    "An exhibition map of the places in Cambridge with a thread to Urdu literary history - Iqbal at Trinity, Rahmat Ali at Emmanuel, the streets in between, and where the language is read and taught today.",
 };
 
 export default function HistoryPage() {
   return (
     <>
       <PageHeader
-        label="Urdu Cambridge"
         titleUrdu="تاریخ"
         title="The city has an Urdu history. Here is where it happened."
-        intro="Four places within a mile of each other, each with a thread back to the language. Two colleges, two rented rooms — and between them, a good deal of the twentieth century."
+        intro="Urdu has left its mark on Cambridge. These are the places where that history was made, and where the language is still read, studied and taught today."
       />
 
       <section className="border-b border-rule/70">
@@ -27,9 +25,10 @@ export default function HistoryPage() {
           </SectionLabel>
 
           <p className="mt-6 max-w-xl leading-relaxed text-ink-muted">
-            Select a pin to read about it. The map opens fixed on the city
-            centre; use <span className="text-forest">Explore map</span> if you
-            would rather move around freely.
+            Select a pin to read about it. The map opens framed so that every
+            location is in view; pan and zoom freely, and use{" "}
+            <span className="text-forest">View all</span> to come back to the
+            full picture.
           </p>
 
           <div className="mt-10">
@@ -84,23 +83,6 @@ export default function HistoryPage() {
           </ol>
         </div>
       </section>
-
-      <section className="bg-paper-deep">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-          <SectionLabel as="h2" className="text-ink-muted">
-            A note on the sources
-          </SectionLabel>
-          <p className="mt-8 max-w-xl leading-relaxed text-ink-muted">
-            These entries were assembled by the society, not by historians, and
-            a couple of them rest on local tradition more than on documents —
-            the Humberstone Road entry says so where it matters. If you know one
-            of these places better than we do, or can point us at a source, we
-            would genuinely like to hear from you.
-          </p>
-        </div>
-      </section>
-
-      <JoinCta />
     </>
   );
 }

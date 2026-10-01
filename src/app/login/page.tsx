@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { signIn } from "@/auth";
-import { Field, Input } from "@/components/form";
 import { FormMessage } from "@/components/form";
 import { PageHeader, buttonBase, buttonVariants } from "@/components/ui";
 import { env } from "@/lib/env";
@@ -17,38 +16,52 @@ type PageProps = {
 };
 
 const ERROR_COPY: Record<string, string> = {
+  // Covers both halves of the check in `signIn`: not a University address, and
+  // a University address that nobody has added yet. Deliberately does not say
+  // which - it is the same remedy either way, and it tells a stranger nothing.
   AccessDenied:
-    "That address is not on the committee list. If you have just taken over a role, ask a current committee member to add you.",
-  Verification:
-    "That sign-in link has expired or has already been used. Request a fresh one below.",
+    "That account cannot sign in. The committee pages need your University (Raven) account, and the address has to have been added by a current committee member. If you have just taken over a role, ask them to add you.",
+  OAuthAccountNotLinked:
+    "That address is already registered here in another form. Ask a committee member to check the access list.",
+  OAuthCallbackError:
+    "Raven did not complete the sign-in. Please try again - if it keeps happening, the site's Raven credentials may need renewing.",
+  /**
+   * Auth.js reports one `Configuration` for two very different things: a config
+   * that really is missing, *and* any `AdapterError` - which in practice means
+   * the database was unreachable.
+   *
+   * The missing-credentials case cannot reach this copy, because the
+   * `ravenEnabled` branch below returns before the error is ever rendered. So by
+   * the time this is shown the credentials exist and something else broke,
+   * almost always the database. Saying "not set up yet" here sent a previous
+   * reader looking for a configuration mistake that was not there.
+   */
   Configuration:
-    "Sign-in is not available: this deployment cannot send email yet.",
+    "Sign-in is set up, but something on our side is not working right now - most likely the site cannot reach its database. Trying a different account will not help. If you look after this site, check the server log for “[auth][error] AdapterError”.",
   Default: "We could not sign you in. Please try again.",
 };
 
 export default async function LoginPage({ searchParams }: PageProps) {
   const { error, from } = await searchParams;
 
-  // Sign-in *is* an email here, so with sending switched off every attempt
-  // would fail on submit. Say so up front rather than after a wasted try.
+  // Without the OAuth client there is nothing to redirect to, so every attempt
+  // would bounce off Google with a placeholder client id. Say so up front
+  // rather than after a wasted round trip. This applies in development too:
+  // unlike the magic link it replaces, Raven has no offline equivalent.
   //
-  // Development is the exception: `sendEmail` prints the whole message,
-  // sign-in link included, to the terminal running `npm run dev` precisely so
-  // a committee developer can sign in without an email account. Blocking the
-  // form here made that documented route impossible — see .env.example and the
-  // note on `sendVerificationRequest` in src/auth.ts.
-  if (!env.emailEnabled && process.env.NODE_ENV === "production") {
+  // This return is also what lets ERROR_COPY.Configuration above be specific:
+  // it takes the missing-credentials case off the table. Keep them together.
+  if (!env.ravenEnabled) {
     return (
       <PageHeader
-        label="Committee"
         title="Sign in is not available yet."
-        intro="Committee sign-in works by emailing you a link, and this site is not set up to send email yet."
+        intro="Committee sign-in uses your University Raven account, and this site has not been given its Raven credentials yet."
       >
         <div className="max-w-md">
           <FormMessage tone="error">
-            Once RESEND_API_KEY and EMAIL_FROM are configured, this page will
-            email you a sign-in link. Until then the committee pages cannot be
-            reached — see .env.example.
+            Once AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET are configured, this page
+            will sign you in with Raven. Until then the committee pages cannot
+            be reached - see .env.example.
           </FormMessage>
         </div>
       </PageHeader>
@@ -57,21 +70,10 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
   return (
     <PageHeader
-      label="Committee"
       title="Sign in."
-      intro="Committee members only. We will email you a link — there is no password to lose or hand over."
+      intro="Committee members only. Sign in with your University Raven account - there is no separate password to lose or pass on."
     >
       <div className="max-w-md">
-        {!env.emailEnabled ? (
-          <div className="mb-6">
-            <FormMessage tone="success">
-              No email is configured, so nothing will be sent: your sign-in
-              link is printed to the terminal running{" "}
-              <code>npm run dev</code>. Open it from there.
-            </FormMessage>
-          </div>
-        ) : null}
-
         {error ? (
           <div className="mb-6">
             <FormMessage tone="error">
@@ -81,36 +83,23 @@ export default async function LoginPage({ searchParams }: PageProps) {
         ) : null}
 
         <form
-          action={async (formData: FormData) => {
+          action={async () => {
             "use server";
-            await signIn("resend", {
-              email: String(formData.get("email") ?? "")
-                .trim()
-                .toLowerCase(),
-              redirectTo: from ?? "/admin",
-            });
+            await signIn("google", { redirectTo: from ?? "/admin" });
           }}
-          className="flex flex-col gap-5"
         >
-          <Field label="Committee email" htmlFor="login-email" required>
-            <Input
-              id="login-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-            />
-          </Field>
-
-          <div>
-            <button
-              type="submit"
-              className={`${buttonBase} ${buttonVariants.primary}`}
-            >
-              Email me a link
-            </button>
-          </div>
+          <button
+            type="submit"
+            className={`${buttonBase} ${buttonVariants.primary}`}
+          >
+            Sign in with Raven
+          </button>
         </form>
+
+        <p className="mt-5 text-sm leading-relaxed text-ink-muted">
+          You will be sent to the University sign-in page, with whatever
+          two-factor step your account already uses.
+        </p>
       </div>
     </PageHeader>
   );

@@ -8,23 +8,24 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Urdu & Poetry",
   description:
-    "Couplets, transliteration and translation from the Cambridge University Urdu Society — plus where to start if you are learning.",
+    "Couplets, transliteration and translation from the Cambridge University Urdu Society - plus where to start if you are learning.",
 };
 
-const startingPoints = [
-  {
-    title: "Come to a mushaira",
-    body: "Every piece is introduced in English before it is read. You do not need a word of Urdu to enjoy an evening of it.",
-  },
-  {
-    title: "Learn the script",
-    body: "We run beginner sessions on the Nastaliq alphabet each Michaelmas — the letters first, then joining them, then your own name.",
-  },
-  {
-    title: "Read alongside",
-    body: "We pair each verse we study with a transliteration and a translation, so you can follow the sound and the sense together.",
-  },
-];
+// Hidden for now, alongside the "If you are just starting" section below.
+// const startingPoints = [
+//   {
+//     title: "Come to a mushaira",
+//     body: "Every piece is introduced in English before it is read. You do not need a word of Urdu to enjoy an evening of it.",
+//   },
+//   {
+//     title: "Learn the script",
+//     body: "We run beginner sessions on the Nastaliq alphabet each Michaelmas - the letters first, then joining them, then your own name.",
+//   },
+//   {
+//     title: "Read alongside",
+//     body: "We pair each verse we study with a transliteration and a translation, so you can follow the sound and the sense together.",
+//   },
+// ];
 
 export default async function UrduPage() {
   const verses = await getVerseArchive();
@@ -33,10 +34,9 @@ export default async function UrduPage() {
   return (
     <>
       <PageHeader
-        label="Urdu & Poetry"
         titleUrdu="زبان، ادب"
         title="The language, and what people have made with it."
-        intro="Urdu carries one of the great poetic traditions — the ghazal, the nazm, the couplet that turns on a single word. Here is some of what we read together."
+        intro="Urdu carries one of the great poetic traditions: the ghazal, the nazm, the couplet that turns on a single word."
       />
 
       {featured ? (
@@ -79,7 +79,7 @@ export default async function UrduPage() {
                           </span>
                         ))}
                       </p>
-                      <p className="mt-4 text-sm leading-relaxed">
+                      <p className="mt-4 text-sm leading-relaxed whitespace-pre-line">
                         {verse.translation}
                       </p>
                       <figcaption className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -107,6 +107,7 @@ export default async function UrduPage() {
         </section>
       ) : null}
 
+      {/* Hidden for now.
       <section>
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-20">
           <SectionLabel as="h2" trailingRule className="text-ink-muted">
@@ -131,6 +132,7 @@ export default async function UrduPage() {
           </ul>
         </div>
       </section>
+      */}
     </>
   );
 }

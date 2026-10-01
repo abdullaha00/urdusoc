@@ -12,7 +12,7 @@ const sections = [
   {
     heading: "What we hold",
     body: [
-      "If you join the society, we hold your name, email address and — if you give it — your CRSid, so we can tell you what is on and show the SU how many members we have.",
+      "Joining the society happens on the Cambridge SU's own site, under the SU's privacy notice. From the membership list the SU gives us, we hold your name, email address and - if you gave it - your CRSid, so we can tell you what is on.",
       "If you book a place at an event, we hold your name, email and the number of places, so we can run the door list. Anything you write in the notes field is seen only by the committee.",
       "If you join the mailing list, we hold your email address and the date you confirmed it.",
     ],
@@ -50,7 +50,6 @@ export default function PrivacyPage() {
   return (
     <>
       <PageHeader
-        label="Privacy"
         title="What we do with your details."
         intro={`${society.name} is a small student society. We hold as little about you as we can, and only to run the society.`}
       />

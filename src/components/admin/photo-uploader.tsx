@@ -1,6 +1,6 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
+import { upload, uploadPresigned } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { addPhoto } from "@/app/admin/gallery/photo-actions";
@@ -12,8 +12,8 @@ const ACCEPT = "image/jpeg,image/png,image/webp";
 /**
  * Reads the real pixel dimensions before uploading.
  *
- * `photos.width` and `photos.height` are both NOT NULL — the public gallery
- * needs them to reserve space and avoid layout shift — and the browser is the
+ * `photos.width` and `photos.height` are both NOT NULL - the public gallery
+ * needs them to reserve space and avoid layout shift - and the browser is the
  * only place they are known without decoding the image again on the server.
  */
 async function readDimensions(file: File): Promise<{ width: number; height: number }> {
@@ -25,7 +25,13 @@ async function readDimensions(file: File): Promise<{ width: number; height: numb
   }
 }
 
-export function PhotoUploader({ albumId }: { albumId: string }) {
+export function PhotoUploader({
+  albumId,
+  uploadMode,
+}: {
+  albumId: string;
+  uploadMode: "presigned" | "legacy";
+}) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [alt, setAlt] = useState("");
@@ -51,13 +57,18 @@ export function PhotoUploader({ albumId }: { albumId: string }) {
     try {
       const { width, height } = await readDimensions(file);
 
-      const blob = await upload(`gallery/${albumId}/${file.name}`, file, {
-        access: "public",
+      const pathname = `gallery/${albumId}/${file.name}`;
+      const options = {
+        access: "public" as const,
         handleUploadUrl: "/api/admin/gallery/upload",
         // Read back in the route handler to check the album exists before a
-        // token is minted.
+        // token or presigned URL is minted.
         clientPayload: albumId,
-      });
+      };
+      const blob =
+        uploadMode === "presigned"
+          ? await uploadPresigned(pathname, file, options)
+          : await upload(pathname, file, options);
 
       const result = await addPhoto({
         albumId,

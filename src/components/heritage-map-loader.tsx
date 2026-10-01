@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
  *
  * Leaflet reaches for `window` at module scope, so it cannot be server
  * rendered. `ssr: false` is not allowed from a Server Component, which is why
- * this thin client wrapper exists — /history itself stays a Server Component.
+ * this thin client wrapper exists - /history itself stays a Server Component.
  */
 const HeritageMap = dynamic(
   () => import("@/components/heritage-map").then((mod) => mod.HeritageMap),

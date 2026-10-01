@@ -16,7 +16,7 @@ import {
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "How to reach the Cambridge University Urdu Society — enquiries, collaborations, press and alumni.",
+    "How to reach the Cambridge University Urdu Society - enquiries, collaborations, press and alumni.",
 };
 
 export default function ContactPage() {
@@ -28,7 +28,6 @@ export default function ContactPage() {
   return (
     <>
       <PageHeader
-        label="Contact"
         titleUrdu="رابطہ"
         title="Say hello."
         intro={contact.intro}
@@ -112,7 +111,7 @@ export default function ContactPage() {
                 Khuda Hafiz
               </p>
               <p className="mt-6 text-center text-sm leading-relaxed text-ink-muted">
-                A warm and very ordinary Urdu goodbye — closer to &ldquo;may God
+                A warm and very ordinary Urdu goodbye - closer to &ldquo;may God
                 protect you&rdquo; than to anything formal.
               </p>
             </div>

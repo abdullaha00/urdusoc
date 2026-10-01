@@ -13,7 +13,7 @@ import { isUniqueViolation, reportUnexpected } from "@/lib/errors";
  *
  * This is the one screen where a mistake locks the committee out of its own
  * website, so it is owner-only and it refuses to leave the society with zero
- * owners — see `assertNotLastOwner`. Everything else in the admin can be put
+ * owners - see `assertNotLastOwner`. Everything else in the admin can be put
  * right by signing in again; this cannot.
  *
  * Results come back as `?error=` / `?ok=` on the page rather than through
@@ -83,7 +83,7 @@ export async function addAdmin(formData: FormData): Promise<void> {
       .insert(admins)
       .values({ email, name, role, addedByEmail: actor.email });
   } catch (error) {
-    // Already on the list — harmless, but say so rather than showing the
+    // Already on the list - harmless, but say so rather than showing the
     // generic failure, since the committee will assume nothing happened.
     if (isUniqueViolation(error, "admins_email_unique")) {
       redirect(`${ACCESS_PATH}?error=Duplicate`);

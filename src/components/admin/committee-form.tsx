@@ -127,7 +127,7 @@ export function CommitteeForm({
       <Field
         label="Bio"
         htmlFor="member-bio"
-        hint="Optional. A couple of sentences. Only shown while this is the current committee — the archive lists name, college and course alone."
+        hint="Optional. A couple of sentences. Only shown while this is the current committee - the archive lists name, college and course alone."
         error={state.fieldErrors?.bio}
       >
         <Textarea
@@ -176,7 +176,7 @@ export function CommitteeForm({
         defaultChecked={person?.isCurrent ?? true}
         label={
           <>
-            <span className="font-medium text-ink">Current committee</span> —
+            <span className="font-medium text-ink">Current committee</span> -
             shown on /committee. Untick for past years.
           </>
         }

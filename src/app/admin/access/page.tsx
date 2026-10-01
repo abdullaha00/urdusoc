@@ -52,7 +52,7 @@ export default async function AdminAccessPage({ searchParams }: PageProps) {
     <>
       <AdminPageHeader
         title="Access"
-        description="Who can sign in to these committee pages. Checked on every request, so removing someone takes effect at once — even if they are signed in."
+        description="Who can sign in to these committee pages. Checked on every request, so removing someone takes effect at once - even if they are signed in."
       />
 
       {error ? (
@@ -71,15 +71,14 @@ export default async function AdminAccessPage({ searchParams }: PageProps) {
         </div>
       ) : null}
 
-      {/* Sign-in *is* an email here, so an address added while sending is off
-          cannot actually be used. Say so on the page that adds it. */}
-      {!env.emailEnabled ? (
+      {/* Sign-in needs Raven credentials, so an address added while they are
+          missing cannot actually be used. Say so on the page that adds it. */}
+      {!env.ravenEnabled ? (
         <div className="mb-6">
           <FormMessage tone="error">
-            This deployment cannot send email, so nobody can sign in yet —
-            including anyone added below. Set RESEND_API_KEY and EMAIL_FROM to
-            switch sign-in on. Locally, sign-in links are printed to the
-            terminal running <code>npm run dev</code>.
+            This deployment has no Raven credentials, so nobody can sign in yet -
+            including anyone added below. Set AUTH_GOOGLE_ID and
+            AUTH_GOOGLE_SECRET to switch sign-in on.
           </FormMessage>
         </div>
       ) : null}
@@ -113,7 +112,7 @@ export default async function AdminAccessPage({ searchParams }: PageProps) {
                 ) : null}
               </Td>
 
-              <Td className="text-ink-muted">{row.name ?? "—"}</Td>
+              <Td className="text-ink-muted">{row.name ?? "-"}</Td>
 
               <Td>
                 {isLastOwner ? (
@@ -159,12 +158,12 @@ export default async function AdminAccessPage({ searchParams }: PageProps) {
               </Td>
 
               <Td className="text-xs break-all text-ink-muted">
-                {row.addedByEmail ?? "—"}
+                {row.addedByEmail ?? "-"}
               </Td>
 
               <Td className="text-right">
                 {isLastOwner ? (
-                  <span className="text-xs text-ink-muted">—</span>
+                  <span className="text-xs text-ink-muted">-</span>
                 ) : (
                   <form action={removeAdmin}>
                     <input type="hidden" name="id" value={row.id} />
@@ -175,7 +174,7 @@ export default async function AdminAccessPage({ searchParams }: PageProps) {
                       pendingLabel="Removing…"
                       description={
                         isSelf
-                          ? "This is your own access — you will be signed out of the committee pages."
+                          ? "This is your own access - you will be signed out of the committee pages."
                           : "They lose access immediately, even if signed in."
                       }
                     />
@@ -192,7 +191,7 @@ export default async function AdminAccessPage({ searchParams }: PageProps) {
           Add someone
         </h2>
         <p className="mt-3 mb-5 text-sm leading-relaxed text-ink-muted">
-          Use the address they will actually sign in with — the sign-in link is
+          Use the address they will actually sign in with - the sign-in link is
           emailed there, and it is matched exactly. Editors can change events,
           verses, the roster and the gallery. Owners can additionally manage
           this page.
@@ -202,7 +201,7 @@ export default async function AdminAccessPage({ searchParams }: PageProps) {
           <Field
             label="Email"
             htmlFor="access-email"
-            hint="A personal address is fine — a shared inbox means a shared sign-in link."
+            hint="A personal address is fine - a shared inbox means a shared sign-in link."
             required
           >
             <Input
@@ -235,14 +234,14 @@ export default async function AdminAccessPage({ searchParams }: PageProps) {
 
       <section className="mt-12 max-w-lg border-t border-rule/70 pt-8">
         <h2 className="text-[0.65rem] font-medium tracking-[0.22em] text-ink-muted uppercase">
-          At handover
+          When the committee changes
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-ink-muted">
           Add the incoming committee as owners before the outgoing one removes
-          itself, and check this list has at least two owners at all times — an
+          itself, and check this list has at least two owners at all times - an
           owner who graduates and loses their email cannot be replaced from
-          inside the site. There is no password and no external account to hand
-          over; this list is the whole of it.
+          inside the site. There is no password and no external account to pass
+          on; this list is the whole of it.
         </p>
       </section>
     </>

@@ -30,7 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — never commit real values
+# env files - never commit real values
 .env*
 # ...except the template. It holds only placeholders, and src/lib/env.ts points
 # at it by name when a variable is missing, so it has to be in the repo.
@@ -46,10 +46,26 @@ next-env.d.ts
 # Local development database (PGlite)
 .pglite/
 
+# The pictures pulled off Instagram by `npm run instagram:archive`.
+#
+# Tens of megabytes of JPEGs and reels, none of which belong in a source
+# repository - and the point of archiving them is to get them into Blob
+# storage, not into git. The manifest beside them is committed, so the record
+# of what was taken survives even where the files do not.
+scripts/data/instagram/*
+!scripts/data/instagram/manifest.json
+!scripts/data/instagram/README.md
+# Written by `npm run blob:upload` and read by `npm run db:import-events`, so
+# an import needs neither the pictures nor a Blob token.
+!scripts/data/instagram/uploads.json
+# Written by `npm run media:upload` and read by the curated gallery and
+# committee importers.
+!scripts/data/instagram/media-uploads.json
+
 # The jali reference photograph.
 #
 # The 17th-century screen it shows is long out of copyright, but the photograph
-# of it is a separate work and we hold no licence for it — it carries the marks
+# of it is a separate work and we hold no licence for it - it carries the marks
 # of a studio or catalogue shot. It was used as visual reference only; the
 # lattice and arch on the site are original SVG (src/components/jali.tsx), so
 # nothing depends on this file. Keep it out of the history: committing it is
@@ -57,4 +73,3 @@ next-env.d.ts
 #
 # The rest of attachments/ is the committee's own work and stays in the repo.
 attachments/jali-new.jpg
-

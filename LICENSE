@@ -22,7 +22,7 @@ SOFTWARE.
 
 ================================================================================
 
-SCOPE — what this licence does and does not cover
+SCOPE - what this licence does and does not cover
 ================================================================================
 
 The MIT licence above applies to the SOURCE CODE in this repository only.
@@ -52,5 +52,5 @@ Urdu verse quoted in the site content (in src/lib/content.ts, and in the
 database seed) is quoted for the society's own use. Where a poet is still in
 copyright, reuse is the reuser's responsibility to clear.
 
-If you reuse this code — and you are welcome to — replace the society's name,
+If you reuse this code - and you are welcome to - replace the society's name,
 logo, term cards and quoted verse with your own before deploying it.

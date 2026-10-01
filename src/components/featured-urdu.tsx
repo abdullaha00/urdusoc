@@ -2,12 +2,12 @@ import type { Verse } from "@/lib/db/schema";
 import { ArrowLink, Diamond, SectionLabel, Urdu } from "@/components/ui";
 
 /**
- * Editorial verse spread. The verse comes from the `verses` table — the
+ * Editorial verse spread. The verse comes from the `verses` table - the
  * committee changes it at /admin/verses, and the archive lives on /urdu.
  */
 export function FeaturedUrdu({
   verse,
-  showArchiveLink = true,
+  showArchiveLink = false,
 }: {
   verse: Verse | null;
   showArchiveLink?: boolean;
@@ -76,11 +76,13 @@ export function VerseSpread({
 
         <div>
           <Diamond className="mb-4 sm:hidden" />
-          <p className="leading-relaxed">{verse.translation}</p>
+          <p className="leading-relaxed whitespace-pre-line">
+            {verse.translation}
+          </p>
         </div>
       </div>
 
-      <figcaption className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-rule pt-6 text-sm">
+      <figcaption className="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-rule pt-6 text-sm">
         <span className="font-medium">{verse.poetName}</span>
         {verse.poetUrdu ? (
           <>
@@ -90,11 +92,6 @@ export function VerseSpread({
         ) : null}
         {verse.poetYears ? (
           <span className="text-ink-muted">{verse.poetYears}</span>
-        ) : null}
-        {verse.note ? (
-          <span className="ml-auto hidden text-ink-muted sm:block">
-            {verse.note}
-          </span>
         ) : null}
       </figcaption>
     </figure>

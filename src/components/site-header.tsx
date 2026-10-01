@@ -29,19 +29,24 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 bg-paper/85 backdrop-blur-md">
       {/*
-        Navigation only. The society's full name and its SU affiliation used to
-        sit in a bar above this; both now live in the footer, where there is
-        room to set them properly — see the affiliation lockup in
-        src/components/site-footer.tsx.
+        The SU affiliation lives in the footer, where there is room to set it
+        properly - see the affiliation lockup in src/components/site-footer.tsx.
+
+        The society's full name does not, though: it used to sit in a bar above
+        this nav, and with that bar gone an interior page like /events named us
+        nowhere above the fold - only in its <title>. So the name comes back
+        here as a caption under the wordmark, small enough not to compete with
+        it. It is hidden on the narrowest screens, where thirty-three
+        characters would push the lockup into the menu button.
       */}
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 border-b border-rule/80 px-5 sm:px-8">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-3"
-          aria-label={`${society.name} — home`}
+          aria-label={`${society.name} - home`}
         >
           {/* Decorative: the link is already labelled, and the crest's arched
-              lettering is unreadable at this size — the wordmark names us. */}
+              lettering is unreadable at this size - the wordmark names us. */}
           <Image
             src="/logo.png"
             alt=""
@@ -51,11 +56,48 @@ export function SiteHeader() {
             priority
             className="size-[34px] shrink-0"
           />
-          <span className="font-serif text-xl leading-none font-semibold tracking-tight text-forest">
-            {society.shortName}
+          {/* The wordmark row, with the full name set beneath it. Both sit in
+              one column so the divider and اردو stay aligned to the wordmark
+              rather than to the taller lockup. */}
+          <span className="flex flex-col gap-1.5">
+            <span className="flex items-center gap-3">
+              <span className="font-serif text-xl leading-none font-semibold tracking-tight text-forest">
+                {society.shortName}
+              </span>
+              <span aria-hidden className="h-4 w-px bg-rule" />
+              <Urdu className="text-sm leading-none text-gold-deep">اردو</Urdu>
+            </span>
+            {/*
+              The same treatment the footer gives this exact string and the
+              hero gives the tagline: serif, sentence case, tracking-tight.
+              Muted rather than the footer's forest, so it stays subordinate to
+              the wordmark it sits under. It reads as a name, which is what it
+              is - set as letterspaced caps it read as interface chrome.
+
+              Sentence case is also what makes the size affordable. Caps plus
+              letterspacing is so much wider that this line at 1rem is narrower
+              than the same name was at 0.66rem - half again bigger and 25px
+              shorter. No explicit weight: 400 is what the hero and the footer
+              use, and it is the one weight all six font themes actually ship.
+
+              Shown wherever the row has room, and only there. Below `sm` it
+              would push the lockup into the menu button. At `lg` exactly -
+              1024px, where the nav appears but the bar is still narrow - it
+              costs "Urdu & Poetry" a second line and stretches the join button
+              to fill it, so it stands down again until `xl`. Measured, not
+              guessed, and sized by the widest font theme rather than the
+              shipping one: change the nav links, the size or the tracking, and
+              measure 1024px and theme D again.
+            */}
+            <span
+              // Hook for the development-only Name switcher. See
+              // src/components/name-font-switcher.tsx.
+              data-society-name
+              className="hidden font-serif text-base leading-none tracking-tight text-ink-muted sm:block lg:hidden xl:block"
+            >
+              {society.name}
+            </span>
           </span>
-          <span aria-hidden className="h-4 w-px bg-rule" />
-          <Urdu className="text-sm leading-none text-gold-deep">اردو</Urdu>
         </Link>
 
         <div className="flex items-center gap-6">
@@ -82,11 +124,13 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          <div className="hidden lg:block">
-            <ButtonLink href={joinCta.primaryCta.href} className="px-5 py-2.5">
-              {joinCta.primaryCta.label}
-            </ButtonLink>
-          </div>
+          {pathname !== "/" ? (
+            <div className="hidden lg:block">
+              <ButtonLink href={joinCta.primaryCta.href} className="px-5 py-2.5">
+                {joinCta.primaryCta.label}
+              </ButtonLink>
+            </div>
+          ) : null}
 
           <button
             type="button"

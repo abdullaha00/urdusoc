@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { JoinCta } from "@/components/join-cta";
 import { ButtonLink, Diamond, PageHeader, SectionLabel, Urdu } from "@/components/ui";
-import { about, pillars } from "@/lib/content";
+import { about, joinCta, pillars } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "About",
@@ -13,7 +12,6 @@ export default function AboutPage() {
   return (
     <>
       <PageHeader
-        label="About"
         titleUrdu="ثقافت"
         title="A place in Cambridge where Urdu is spoken out loud."
         intro={about.intro}
@@ -62,8 +60,8 @@ export default function AboutPage() {
               <span aria-hidden className="h-px w-10 bg-rule" />
               <Diamond className="opacity-70" />
             </div>
-            <ButtonLink href="/join" className="mt-8">
-              Join UrduSoc
+            <ButtonLink href={joinCta.primaryCta.href} className="mt-8">
+              {joinCta.primaryCta.label}
             </ButtonLink>
           </div>
 
@@ -79,8 +77,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
-      <JoinCta />
     </>
   );
 }

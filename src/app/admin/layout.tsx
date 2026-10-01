@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/auth/guard";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { default: "Admin", template: "%s — Admin" },
+  title: { default: "Admin", template: "%s - Admin" },
   // Never index the committee's working pages, even if a URL leaks.
   robots: { index: false, follow: false },
 };
@@ -17,7 +17,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // The gate for every admin page. Actions guard themselves separately —
+  // The gate for every admin page. Actions guard themselves separately -
   // a layout does not run before a server action.
   const admin = await requireAdmin();
 

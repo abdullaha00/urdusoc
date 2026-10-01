@@ -10,9 +10,9 @@ export class UserFacingError extends Error {}
 
 type PostgresErrorish = {
   code?: string;
-  /** postgres-js spelling — production. */
+  /** postgres-js spelling - production. */
   constraint_name?: string;
-  /** node-postgres and PGlite spelling — the local development database. */
+  /** node-postgres and PGlite spelling - the local development database. */
   constraint?: string;
   cause?: unknown;
 };

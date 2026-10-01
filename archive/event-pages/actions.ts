@@ -43,7 +43,7 @@ export async function rsvpAction(
 ): Promise<RsvpState> {
   // Honeypot: only a bot fills this in.
   if (formData.get("company")) {
-    return { status: "success", message: "Thank you — your place is booked." };
+    return { status: "success", message: "Thank you - your place is booked." };
   }
 
   const parsed = rsvpSchema.safeParse({
@@ -127,7 +127,7 @@ export async function rsvpAction(
       };
     }
 
-    // Unique index on (event, email) — they have already booked.
+    // Unique index on (event, email) - they have already booked.
     if (isUniqueViolation(error, "registrations_event_email_idx")) {
       return {
         status: "error",
@@ -160,7 +160,7 @@ export async function rsvpAction(
             ? `${formatEventDateWithYear(event.startsAt)} at ${formatEventTime(event.startsAt)}`
             : formatEventDateWithYear(event.startsAt),
           event.venue,
-          `Your reference is ${reference} — bring it to the door.`,
+          `Your reference is ${reference} - bring it to the door.`,
           `If you can no longer make it, reply to this email so we can offer your place to someone else.`,
           `${env.siteUrl}/events/${event.slug}`,
         ].filter((line): line is string => Boolean(line)),
@@ -176,11 +176,11 @@ export async function rsvpAction(
   return {
     status: "success",
     // The reference is shown on screen either way (see rsvp-form.tsx), so a
-    // booking still works with email switched off — we just must not promise
+    // booking still works with email switched off - we just must not promise
     // a confirmation that is never sent.
     message: env.emailEnabled
-      ? "Your place is booked — check your email for the details."
-      : "Your place is booked. Please note your reference below — we are not sending confirmation emails at the moment.",
+      ? "Your place is booked - check your email for the details."
+      : "Your place is booked. Please note your reference below - we are not sending confirmation emails at the moment.",
     reference,
   };
 }

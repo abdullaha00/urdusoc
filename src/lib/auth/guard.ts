@@ -6,11 +6,11 @@ import { admins, type Admin } from "@/lib/db/schema";
 
 /**
  * The real authorization check. Call this at the top of every admin page and at
- * the top of every admin server action — never rely on `proxy.ts`, which only
+ * the top of every admin server action - never rely on `proxy.ts`, which only
  * does an optimistic cookie check and cannot be trusted for access control.
  *
- * The allowlist is re-read on every call, so removing someone at handover takes
- * effect immediately even if their session cookie is still valid.
+ * The allowlist is re-read on every call, so removing someone takes effect
+ * immediately even if their session cookie is still valid.
  */
 export async function requireAdmin(): Promise<Admin> {
   const session = await auth();
@@ -27,7 +27,7 @@ export async function requireAdmin(): Promise<Admin> {
     .limit(1);
 
   if (!admin) {
-    // Signed in, but no longer on the allowlist — e.g. removed at handover.
+    // Signed in, but no longer on the allowlist - e.g. removed by an owner.
     redirect("/login?error=AccessDenied");
   }
 

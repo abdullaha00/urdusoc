@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { RsvpForm } from "@/components/rsvp-form";
 import { ButtonLink, Diamond, SectionLabel, Urdu } from "@/components/ui";
-import { EXTERNAL_LINKS, society } from "@/lib/content";
+import { EXTERNAL_LINKS, joinCta, society } from "@/lib/content";
 import {
   formatEventDateWithYear,
   formatEventTime,
@@ -32,6 +33,9 @@ export async function generateMetadata({
       title: event.title,
       description: event.summary,
       type: "article",
+      // The poster is what the committee shared on Instagram in the first
+      // place, so it is the right thing for a link preview to show.
+      ...(event.posterUrl ? { images: [{ url: event.posterUrl }] } : {}),
     },
   };
 }
@@ -46,7 +50,7 @@ export default async function EventPage({ params }: PageProps) {
   const hasHappened = isPast(event.startsAt);
 
   // A row is omitted rather than shown empty: for events recovered from old term
-  // cards the time and venue were never recorded, and a blank "Time —" reads as
+  // cards the time and venue were never recorded, and a blank "Time -" reads as
   // a missing value rather than an unknown one.
   const details = [
     { term: "Date", value: formatEventDateWithYear(event.startsAt) },
@@ -156,7 +160,7 @@ export default async function EventPage({ params }: PageProps) {
             </div>
 
             <p className="mt-6 max-w-md text-sm leading-relaxed text-ink-muted">
-              Everything we run is open to everyone — members and non-members,
+              Everything we run is open to everyone - members and non-members,
               fluent speakers and complete beginners. If you have a question
               before coming, message us on{" "}
               <a
@@ -170,6 +174,22 @@ export default async function EventPage({ params }: PageProps) {
           </div>
 
           <div className="lg:border-l lg:border-rule lg:pl-16">
+            {/* The whole poster, uncropped: these are Instagram artwork, and
+                the date, time and room are usually printed along the bottom
+                edge. The box is taller than any of them so nothing is cut. */}
+            {event.posterUrl ? (
+              <div className="relative mb-12 aspect-[4/5] overflow-hidden border border-rule bg-paper-deep">
+                <Image
+                  src={event.posterUrl}
+                  alt={event.posterAlt ?? `Poster for ${event.title}.`}
+                  fill
+                  loading="eager"
+                  sizes="(min-width: 1024px) 28rem, 90vw"
+                  className="object-contain"
+                />
+              </div>
+            ) : null}
+
             <SectionLabel as="h2" className="text-ink-muted">
               {hasHappened ? "This event has passed" : "Book a place"}
             </SectionLabel>
@@ -178,7 +198,7 @@ export default async function EventPage({ params }: PageProps) {
               {hasHappened ? (
                 <div>
                   <p className="leading-relaxed text-ink-muted">
-                    This one is over — photographs usually go up in the gallery a
+                    This one is over - photographs usually go up in the gallery a
                     week or two afterwards.
                   </p>
                   <ButtonLink href="/events" variant="outline" className="mt-6">
@@ -189,11 +209,11 @@ export default async function EventPage({ params }: PageProps) {
                 availability.soldOut ? (
                   <div>
                     <p className="leading-relaxed text-ink-muted">
-                      Every place has gone. Join the mailing list and we will
-                      tell you the moment the next one is announced.
+                      Every place has gone. Join the society and we will tell
+                      you the moment the next one is announced.
                     </p>
-                    <ButtonLink href="/join" className="mt-6">
-                      Join UrduSoc
+                    <ButtonLink href={joinCta.primaryCta.href} className="mt-6">
+                      {joinCta.primaryCta.label}
                     </ButtonLink>
                   </div>
                 ) : (
@@ -203,7 +223,7 @@ export default async function EventPage({ params }: PageProps) {
                 <div>
                   <p className="leading-relaxed text-ink-muted">
                     Tickets are {formatPrice(event.pricePence)}. Booking opens
-                    here shortly — in the meantime, message us on Instagram to
+                    here shortly - in the meantime, message us on Instagram to
                     reserve a place.
                   </p>
                   <ButtonLink
@@ -217,11 +237,15 @@ export default async function EventPage({ params }: PageProps) {
               ) : (
                 <div>
                   <p className="leading-relaxed text-ink-muted">
-                    No booking needed — just turn up. Doors open a little before
+                    No booking needed - just turn up. Doors open a little before
                     we start.
                   </p>
-                  <ButtonLink href="/join" variant="outline" className="mt-6">
-                    Join the mailing list
+                  <ButtonLink
+                    href={joinCta.primaryCta.href}
+                    variant="outline"
+                    className="mt-6"
+                  >
+                    {joinCta.primaryCta.label}
                   </ButtonLink>
                 </div>
               )}

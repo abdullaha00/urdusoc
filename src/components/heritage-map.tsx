@@ -9,6 +9,7 @@ import {
   CAMBRIDGE_CENTRE,
   HERITAGE_LOCATIONS,
   LOCATION_ZOOM,
+  LOCATIONS_BOUNDS,
   type HeritageLocation,
 } from "@/lib/heritage";
 
@@ -17,37 +18,73 @@ import {
  *
  * Licensing, since it is the reason for each choice here:
  *   • Leaflet is BSD-2-Clause.
- *   • The basemap is CARTO Positron, free to use with attribution and with no
- *     account or API key, which is what keeps this deployable by a committee
- *     that owns no billing relationship. Attribution is rendered by Leaflet's
- *     own control and must not be removed.
- *   • The underlying map data is OpenStreetMap, ODbL, also attributed.
+ *   • The basemap is OpenStreetMap's own standard raster tiles: no account, no
+ *     API key, no billing relationship - which is what keeps this deployable
+ *     by a committee that owns none of those. The data is ODbL and the
+ *     attribution is rendered by Leaflet's own control; it must not be removed,
+ *     and removing it is what would make this use unlicensed.
+ *   • Usage sits inside the OSM Foundation's tile usage policy at this site's
+ *     traffic. If /history ever becomes heavily trafficked, the policy - not
+ *     the code - is the thing to re-read.
  * Google Maps is deliberately not used: it requires an API key and a billing
- * account, which is exactly the dependency a handover cannot survive.
+ * account, which is exactly the dependency a change of committee cannot survive.
+ *
+ * ⚠️ This previously used CARTO Positron on the same "free, no key" reasoning,
+ * and CARTO withdrew keyless access. Their tile endpoint did not start failing;
+ * it started answering HTTP 200 with a grey "API KEY REQUIRED" watermark image,
+ * so Leaflet's `tileerror` never fired and the map below rendered as a field of
+ * watermarks with live pins on top. If this map ever looks wrong rather than
+ * broken, suspect the tile provider first and open a tile URL directly.
  *
  * The brief specified exact hex values for land, river, buildings and roads.
- * Those need vector tiles, and every vector-tile host wants an API key — the
+ * Those need vector tiles, and every vector-tile host wants an API key - the
  * dependency we are avoiding. Instead the raster basemap is warmed with a CSS
  * filter to sit in the site's palette. The result is close in feeling, and free
  * in a way the exact-hex route is not. If a future committee is willing to take
  * on a keyed provider, this is the piece to revisit.
  *
- * Interaction follows the brief: the map opens locked, as an exhibition
- * display; "Explore map" hands over full control; clicking a pin zooms in and
- * opens a panel; closing the panel returns to the curated overview.
+ * Interaction: the map is fully interactive from load. It previously opened
+ * locked, as an exhibition display, with an "Explore map" button to hand over
+ * control - that gate is gone and the toggle with it. Clicking a pin zooms in
+ * and opens a panel; closing the panel returns to the curated overview, which
+ * is now the only thing "View all" is for.
+ *
+ * ⚠️ Wheel zoom is therefore live as soon as the page loads, so a reader
+ * scrolling down /history over the map will zoom it instead of scrolling past.
+ * That is the known cost of dropping the gate; if it proves annoying, the fix
+ * is `scrollWheelZoom: "center"` behind a modifier key, not bringing the toggle
+ * back.
  *
  * This component is the map only. The written list of the same locations is
- * server-rendered on /history, deliberately outside this file — it must not
+ * server-rendered on /history, deliberately outside this file - it must not
  * depend on Leaflet loading, on script running, or on a pointer, and putting
  * it here would have made it depend on all three.
  */
 
-const TILE_URL = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+// No {s} subdomain: OSM serves from one host and deprecated the a/b/c split.
+// No {r} retina variant either - osm.org has no @2x tiles and answers 400.
+const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 /**
- * One pin design for every location, as specified — the historical distinction
+ * The curated overview: every pin in frame, fitted rather than fixed, so the
+ * spread from the University Library in the west to the city cemetery in the
+ * east stays framed on a phone as well as a desktop. Capped at 15 so a future
+ * cluster of nearby pins cannot zoom the opening view into a single street.
+ */
+const OVERVIEW_PADDING: L.PointExpression = [40, 40];
+const OVERVIEW_MAX_ZOOM = 15;
+
+function overviewBounds() {
+  return L.latLngBounds(
+    [LOCATIONS_BOUNDS.south, LOCATIONS_BOUNDS.west],
+    [LOCATIONS_BOUNDS.north, LOCATIONS_BOUNDS.east],
+  );
+}
+
+/**
+ * One pin design for every location, as specified - the historical distinction
  * belongs in the panel, not in a colour key nobody is given.
  */
 function pinIcon(selected: boolean) {
@@ -65,16 +102,15 @@ export function HeritageMap() {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
 
   const [selected, setSelected] = useState<HeritageLocation | null>(null);
-  const [exploring, setExploring] = useState(false);
   const [failed, setFailed] = useState(false);
 
   /** Returns to the curated overview. */
   const resetView = useCallback(() => {
-    mapRef.current?.flyTo(
-      [CAMBRIDGE_CENTRE.lat, CAMBRIDGE_CENTRE.lng],
-      CAMBRIDGE_CENTRE.zoom,
-      { duration: 1.1 },
-    );
+    mapRef.current?.flyToBounds(overviewBounds(), {
+      padding: OVERVIEW_PADDING,
+      maxZoom: OVERVIEW_MAX_ZOOM,
+      duration: 1.1,
+    });
   }, []);
 
   useEffect(() => {
@@ -95,22 +131,23 @@ export function HeritageMap() {
       map = L.map(container, {
         center: [CAMBRIDGE_CENTRE.lat, CAMBRIDGE_CENTRE.lng],
         zoom: CAMBRIDGE_CENTRE.zoom,
-        minZoom: 13,
+        // 12, not 13: the pins now span from West Road to the city cemetery, and
+        // a narrow phone cannot frame that at 13 - fitBounds would hit the floor
+        // and crop the eastern end off the opening view.
+        minZoom: 12,
         maxZoom: 18,
         maxBounds: bounds,
         maxBoundsViscosity: 1,
-        // Locked by default — this opens as a display, not a navigation tool.
-        dragging: false,
-        scrollWheelZoom: false,
-        // Two-finger drag still pans on touch once dragging is enabled, and
-        // never steals a one-finger page scroll.
+        // Everything on from the start: dragging, wheel zoom and double-click
+        // zoom are all Leaflet defaults, left at their defaults deliberately.
+        // Two-finger drag pans on touch and never steals a one-finger page
+        // scroll, which is what keeps the page readable on a phone.
         touchZoom: true,
-        doubleClickZoom: false,
         zoomControl: false,
         attributionControl: true,
       });
     } catch {
-      // Leaflet could not initialise at all — show the fallback and leave the
+      // Leaflet could not initialise at all - show the fallback and leave the
       // list below as the route to the content.
       queueMicrotask(reportFailure);
       return;
@@ -118,9 +155,8 @@ export function HeritageMap() {
 
     L.tileLayer(TILE_URL, {
       attribution: TILE_ATTRIBUTION,
-      subdomains: "abcd",
-      maxZoom: 20,
-      detectRetina: true,
+      // 19 is as far as osm.org renders; the map itself stops at 18.
+      maxZoom: 19,
     })
       .on("tileerror", reportFailure)
       .addTo(map);
@@ -140,6 +176,13 @@ export function HeritageMap() {
       markersRef.current.set(location.id, marker);
     }
 
+    // Not animated: this is the first paint, not a transition from somewhere.
+    map.fitBounds(overviewBounds(), {
+      padding: OVERVIEW_PADDING,
+      maxZoom: OVERVIEW_MAX_ZOOM,
+      animate: false,
+    });
+
     mapRef.current = map;
 
     // Captured now: the ref's contents are cleared below, and reading
@@ -153,22 +196,6 @@ export function HeritageMap() {
     };
   }, []);
 
-  /** Dragging and wheel zoom follow the Explore toggle. */
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    if (exploring) {
-      map.dragging.enable();
-      map.scrollWheelZoom.enable();
-      map.doubleClickZoom.enable();
-    } else {
-      map.dragging.disable();
-      map.scrollWheelZoom.disable();
-      map.doubleClickZoom.disable();
-    }
-  }, [exploring]);
-
   /** Highlight the open pin, and fly to it. */
   useEffect(() => {
     const map = mapRef.current;
@@ -181,16 +208,12 @@ export function HeritageMap() {
     if (!selected) return;
 
     map.flyTo([selected.lat, selected.lng], LOCATION_ZOOM, { duration: 1.1 });
-    // While a location is open, allow a closer look around it regardless of
-    // the Explore toggle; closing the panel puts the lock back.
-    map.dragging.enable();
   }, [selected]);
 
   const closePanel = useCallback(() => {
     setSelected(null);
-    if (!exploring) mapRef.current?.dragging.disable();
     resetView();
-  }, [exploring, resetView]);
+  }, [resetView]);
 
   /** Escape closes the panel, matching every other dismissible surface. */
   useEffect(() => {
@@ -218,11 +241,8 @@ export function HeritageMap() {
 
         {!failed ? (
           <MapControls
-            exploring={exploring}
-            onToggleExplore={() => setExploring((value) => !value)}
             onReset={() => {
               setSelected(null);
-              setExploring(false);
               resetView();
             }}
           />
@@ -236,29 +256,9 @@ export function HeritageMap() {
   );
 }
 
-function MapControls({
-  exploring,
-  onToggleExplore,
-  onReset,
-}: {
-  exploring: boolean;
-  onToggleExplore: () => void;
-  onReset: () => void;
-}) {
+function MapControls({ onReset }: { onReset: () => void }) {
   return (
     <div className="absolute top-4 left-4 z-[500] flex flex-wrap gap-2">
-      <button
-        type="button"
-        onClick={onToggleExplore}
-        aria-pressed={exploring}
-        className={`rounded-full border px-4 py-2 text-xs tracking-[0.12em] uppercase shadow-paper transition-colors duration-200 ${
-          exploring
-            ? "border-forest bg-forest text-paper"
-            : "border-rule bg-paper text-forest hover:border-forest"
-        }`}
-      >
-        {exploring ? "Exploring" : "Explore map"}
-      </button>
       <button
         type="button"
         onClick={onReset}
@@ -270,7 +270,7 @@ function MapControls({
   );
 }
 
-/** Shown when the tile service cannot be reached — never a broken frame. */
+/** Shown when the tile service cannot be reached - never a broken frame. */
 function MapFallback() {
   return (
     <div className="absolute inset-0 z-[600] flex items-center justify-center bg-paper-deep px-8 text-center">
@@ -282,7 +282,7 @@ function MapFallback() {
   );
 }
 
-/** Side panel on desktop, bottom sheet on mobile — as the brief specified. */
+/** Side panel on desktop, bottom sheet on mobile - as the brief specified. */
 function LocationPanel({
   location,
   onClose,

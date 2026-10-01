@@ -9,7 +9,7 @@ import { society } from "@/lib/content";
  *
  * Sending is optional: with no RESEND_API_KEY and EMAIL_FROM the site still
  * runs, and this becomes a no-op. Callers therefore never need to guard their
- * own calls — but anything that *promises* the user a message will arrive must
+ * own calls - but anything that *promises* the user a message will arrive must
  * check `env.emailEnabled` and say something different.
  *
  * What gets logged depends on the environment, on purpose. In development the
@@ -82,8 +82,8 @@ export async function sendEmail({
   if (!apiKey || !from) {
     console.info(
       process.env.NODE_ENV === "production"
-        ? `[email not configured — not sent] to: ${to} — subject: ${subject}`
-        : `\n[email not configured — not sent]\n  to: ${to}\n  subject: ${subject}\n  ${lines.join("\n  ")}\n`,
+        ? `[email not configured - not sent] to: ${to} - subject: ${subject}`
+        : `\n[email not configured - not sent]\n  to: ${to}\n  subject: ${subject}\n  ${lines.join("\n  ")}\n`,
     );
     return;
   }

@@ -1,12 +1,11 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/lib/db";
-import { members, subscribers } from "@/lib/db/schema";
+import { members } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email";
 import { env } from "@/lib/env";
-import { generateToken } from "@/lib/reference";
+import { subscribeEmail } from "@/lib/subscribe";
 import { membershipTiers } from "@/lib/content";
 
 export type JoinState = {
@@ -113,7 +112,7 @@ export async function joinAction(
       subject: "Welcome to UrduSoc",
       lines: [
         `Assalam-o-alaikum ${name},`,
-        "You're on the list — welcome to the Cambridge University Urdu Society.",
+        "You're on the list - welcome to the Cambridge University Urdu Society.",
         "We run mushairas, conversation evenings and chai socials through Michaelmas, Lent and Easter. Everything is open to everyone, whatever your Urdu is like.",
         `See what's coming up: ${env.siteUrl}/events`,
       ],
@@ -125,100 +124,14 @@ export async function joinAction(
   if (!env.emailEnabled) {
     return {
       status: "success",
-      message: "Welcome to UrduSoc — you're on the list.",
+      message: "Welcome to UrduSoc - you're on the list.",
     };
   }
 
   return {
     status: "success",
     message: subscribe
-      ? "Welcome to UrduSoc. Check your email — there is a link to confirm the mailing list."
+      ? "Welcome to UrduSoc. Check your email - there is a link to confirm the mailing list."
       : "Welcome to UrduSoc. Check your email for a note from us.",
-  };
-}
-
-/* -------------------------------------------------------------------------- */
-/* Mailing list                                                                */
-/* -------------------------------------------------------------------------- */
-
-export type SubscribeState = {
-  status: "idle" | "success" | "error";
-  message?: string;
-};
-
-const subscribeSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .pipe(z.email("That does not look like an email address."));
-
-/**
- * Double opt-in: a row is created as "pending" and only becomes "confirmed"
- * when the address owner clicks the link. Nobody is ever added silently.
- */
-async function subscribeEmail(email: string, source: string) {
-  const db = getDb();
-  const token = generateToken();
-
-  const [existing] = await db
-    .select()
-    .from(subscribers)
-    .where(eq(subscribers.email, email))
-    .limit(1);
-
-  if (existing?.status === "confirmed") return;
-
-  if (existing) {
-    await db
-      .update(subscribers)
-      .set({ token, status: "pending", unsubscribedAt: null })
-      .where(eq(subscribers.id, existing.id));
-  } else {
-    await db.insert(subscribers).values({ email, token, source });
-  }
-
-  await sendEmail({
-    to: email,
-    subject: "Confirm your UrduSoc mailing list subscription",
-    lines: [
-      "One more step: please confirm you would like to hear from the Cambridge University Urdu Society.",
-      `${env.siteUrl}/subscribe/confirm?token=${token}`,
-      "If you did not ask for this, simply ignore this email and nothing will be sent to you.",
-    ],
-  });
-}
-
-export async function subscribeAction(
-  _previous: SubscribeState,
-  formData: FormData,
-): Promise<SubscribeState> {
-  if (formData.get("company")) {
-    return { status: "success", message: "Please check your email to confirm." };
-  }
-
-  const parsed = subscribeSchema.safeParse(formData.get("email"));
-
-  if (!parsed.success) {
-    return {
-      status: "error",
-      message: parsed.error.issues[0]?.message ?? "Please check your address.",
-    };
-  }
-
-  try {
-    await subscribeEmail(parsed.data, String(formData.get("source") ?? "footer"));
-  } catch (error) {
-    console.error("Subscribe failed", error);
-    return {
-      status: "error",
-      message: "We could not sign you up just now. Please try again.",
-    };
-  }
-
-  // Deliberately the same reply whether or not the address was already on the
-  // list, so the form cannot be used to discover who is subscribed.
-  return {
-    status: "success",
-    message: "Almost there — check your email for a confirmation link.",
   };
 }

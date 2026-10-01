@@ -33,7 +33,7 @@ const addPhotoSchema = z.object({
  * Records a photograph the browser has already uploaded to Blob storage.
  *
  * Called directly from the uploader once `upload()` resolves, rather than from
- * Blob's `onUploadCompleted` webhook — that never reaches localhost, so relying
+ * Blob's `onUploadCompleted` webhook - that never reaches localhost, so relying
  * on it would mean photographs silently never appear in local development.
  */
 export async function addPhoto(input: {
@@ -174,7 +174,7 @@ export async function deletePhoto(formData: FormData): Promise<void> {
 
   await getDb().delete(photos).where(eq(photos.id, id));
 
-  if (row?.url && env.blobToken) {
+  if (row?.url && env.blobConfigured) {
     try {
       await del(row.url);
     } catch (error) {

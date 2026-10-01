@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { joinAction, type JoinState } from "@/app/join/actions";
+import { joinAction, type JoinState } from "./actions";
 import {
   Checkbox,
   Field,
@@ -90,7 +90,7 @@ export function JoinForm({
         <Field
           label="CRSid"
           htmlFor="join-crsid"
-          hint="Optional — helps us check SU membership."
+          hint="Optional - helps us check SU membership."
         >
           <Input id="join-crsid" name="crsid" autoComplete="off" />
         </Field>
@@ -110,7 +110,7 @@ export function JoinForm({
           label={
             <>
               I&rsquo;m happy for UrduSoc to hold my name and email to run the
-              society. You can ask us to delete them at any time — see our{" "}
+              society. You can ask us to delete them at any time - see our{" "}
               <a
                 href="/privacy"
                 className="underline decoration-gold/50 underline-offset-4"

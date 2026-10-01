@@ -1,5 +1,5 @@
 /**
- * Verifies the schema, migrations and seed against a real Postgres — an
+ * Verifies the schema, migrations and seed against a real Postgres - an
  * in-process one (PGlite), so this needs no server, no Docker and no secrets.
  *
  * Run it after changing the schema: `npm run db:verify`.
@@ -19,7 +19,7 @@ function check(label: string, condition: boolean, detail?: string) {
     console.log(`  ok    ${label}`);
   } else {
     failures += 1;
-    console.error(`  FAIL  ${label}${detail ? ` — ${detail}` : ""}`);
+    console.error(`  FAIL  ${label}${detail ? ` - ${detail}` : ""}`);
   }
 }
 

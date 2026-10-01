@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 import { ButtonLink, PageHeader } from "@/components/ui";
+import { joinCta } from "@/lib/content";
 import { getDb } from "@/lib/db";
 import { subscribers } from "@/lib/db/schema";
 
@@ -43,7 +44,7 @@ export default async function ConfirmSubscriptionPage({
   const copy = {
     confirmed: {
       title: "You're on the list.",
-      body: "We will write a handful of times a term — mushairas, socials, and the term card. Every email has an unsubscribe link.",
+      body: "We will write a handful of times a term - mushairas, socials, and the term card. Every email has an unsubscribe link.",
     },
     already: {
       title: "You were already on the list.",
@@ -51,14 +52,18 @@ export default async function ConfirmSubscriptionPage({
     },
     invalid: {
       title: "That link has expired.",
-      body: "Confirmation links are single use. Sign up again and we will send a fresh one.",
+      body: "Confirmation links are single use. Join the society on the SU site and we will make sure you hear from us.",
     },
   }[result];
 
   return (
-    <PageHeader label="Mailing list" title={copy.title} intro={copy.body}>
-      <ButtonLink href={result === "invalid" ? "/join" : "/events"}>
-        {result === "invalid" ? "Sign up again" : "See what's coming up"}
+    <PageHeader title={copy.title} intro={copy.body}>
+      <ButtonLink
+        href={result === "invalid" ? joinCta.primaryCta.href : "/events"}
+      >
+        {result === "invalid"
+          ? joinCta.primaryCta.label
+          : "See what's coming up"}
       </ButtonLink>
     </PageHeader>
   );

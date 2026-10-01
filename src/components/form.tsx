@@ -115,7 +115,7 @@ export function SubmitButton({
   pendingLabel?: string;
   variant?: keyof typeof buttonVariants;
   className?: string;
-  /** Held closed until some precondition is met — see `DangerConfirm`. */
+  /** Held closed until some precondition is met - see `DangerConfirm`. */
   disabled?: boolean;
 }) {
   const { pending } = useFormStatus();

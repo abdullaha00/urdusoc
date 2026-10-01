@@ -46,7 +46,7 @@ export async function seed(db: AnyDatabase, adminEmail?: string) {
         "evening of reading aloud. Bring something of your own, bring a favourite by",
         "someone else, or bring nothing at all and simply listen.",
         "",
-        "No prior Urdu is needed — every piece is introduced in English.",
+        "No prior Urdu is needed - every piece is introduced in English.",
       ].join("\n"),
       startsAt: FIRST_EVENT_START,
       venue: "Cambridge Union Blue Room",
@@ -70,11 +70,12 @@ export async function seed(db: AnyDatabase, adminEmail?: string) {
         "bahut nikle mire armān lekin phir bhī kam nikle",
       ],
       translation:
-        "A thousand desires, each one enough to take my breath — many of my longings were granted, and still they were too few.",
+        "A thousand desires, each one enough to take my breath - many of my longings were granted, and still they were too few.",
       poetName: "Mirza Ghalib",
       poetUrdu: "مرزا غالب",
       poetYears: "1797–1869",
-      note: "Read and unpicked line by line at our termly poetry evenings.",
+      note: "",
+      // note: "Read and unpicked line by line at our termly poetry evenings.",
       featured: true,
     },
     {
@@ -87,7 +88,7 @@ export async function seed(db: AnyDatabase, adminEmail?: string) {
         "ro.eñge ham hazār baar koī hameñ satā.e kyuuñ",
       ],
       translation:
-        "It is only a heart, not brick and stone — why should it not brim with pain? I will weep a thousand times; why should anyone torment me for it?",
+        "It is only a heart, not brick and stone - why should it not brim with pain? I will weep a thousand times; why should anyone torment me for it?",
       poetName: "Mirza Ghalib",
       poetUrdu: "مرزا غالب",
       poetYears: "1797–1869",
@@ -154,7 +155,7 @@ export async function seed(db: AnyDatabase, adminEmail?: string) {
   if (existingCommittee.length === 0) {
     await db.insert(schema.committee).values(
       SOCIETY_ROLES.map((role, index) => ({
-        // Deliberately not a real person — the committee fills these in at /admin.
+        // Deliberately not a real person - the committee fills these in at /admin.
         name: "To be announced",
         role,
         academicYear: "2026–27",
@@ -189,7 +190,7 @@ export async function seed(db: AnyDatabase, adminEmail?: string) {
       .from(schema.admins);
     if (count === 0) {
       summary.push(
-        "admins: NONE — set SEED_ADMIN_EMAIL and re-run, or nobody can sign in to /admin",
+        "admins: NONE - set SEED_ADMIN_EMAIL and re-run, or nobody can sign in to /admin",
       );
     }
   }

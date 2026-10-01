@@ -3,7 +3,6 @@ import { ButtonLink, PageHeader, Urdu } from "@/components/ui";
 export default function NotFound() {
   return (
     <PageHeader
-      label="404"
       title="This page has wandered off."
       intro="The link may be old, or we may have moved something. The term card and the gallery are both a good place to pick up the thread."
     >

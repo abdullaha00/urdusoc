@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { JoinForm } from "@/components/join-form";
+import { JoinForm } from "./join-form";
 import { Diamond, PageHeader, SectionLabel, Urdu } from "@/components/ui";
 import { membershipTiers } from "@/lib/content";
 import { env } from "@/lib/env";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Join",
   description:
-    "Join the Cambridge University Urdu Society — open to students, alumni and friends. No prior Urdu needed.",
+    "Join the Cambridge University Urdu Society - open to students, alumni and friends. No prior Urdu needed.",
 };
 
 export default function JoinPage() {

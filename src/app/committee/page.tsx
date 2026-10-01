@@ -17,14 +17,12 @@ export default async function CommitteePage() {
     getCurrentCommittee(),
     getPastCommittees(),
   ]);
-  const year = members[0]?.academicYear;
-
   return (
     <>
       <PageHeader
-        label={year ? `Committee ${year}` : "Committee"}
+        titleUrdu="مجلس"
         title="The people who make it happen."
-        intro="Every year, students volunteer their time to keep one of the world's great literary traditions spoken aloud at Cambridge. If you would like to help run the society — or just have an idea for an evening — say hello."
+        intro="Every year, students volunteer their time to keep one of the world's great literary traditions spoken aloud at Cambridge. If you would like to help run the society - or just have an idea for an evening - say hello."
       />
 
       {/* ---- This year ---------------------------------------------------- */}
@@ -38,13 +36,15 @@ export default async function CommitteePage() {
             <ul className="mt-12 grid gap-x-10 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
               {members.map((person) => (
                 <li key={person.id} className="border-t border-rule pt-6">
+                  {/* The complete 4:5 announcement card, including the
+                      society's typography and decorative design. */}
                   {person.photoUrl ? (
-                    <div className="relative mb-5 aspect-square w-24 overflow-hidden rounded-full border border-rule">
+                    <div className="relative mb-5 aspect-[4/5] overflow-hidden border border-rule bg-paper-deep">
                       <Image
                         src={person.photoUrl}
-                        alt={person.name}
+                        alt={`Announcement card for ${person.name}, ${person.role}.`}
                         fill
-                        sizes="96px"
+                        sizes="(min-width: 1024px) 20rem, (min-width: 640px) 45vw, 90vw"
                         className="object-cover"
                       />
                     </div>
@@ -110,93 +110,72 @@ export default async function CommitteePage() {
         <section className="border-b border-rule/70 bg-paper-deep">
           <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-24">
             <SectionLabel as="h2" trailingRule className="text-ink-muted">
-              Previous committees
+              Previous
             </SectionLabel>
 
-            <p className="mt-6 max-w-xl leading-relaxed text-ink-muted">
-              Everyone who has held a role here, kept in full. Set quieter than
-              this year&rsquo;s roster because the work is done — not because it
-              matters less.
-            </p>
+            <div className="mt-12 space-y-16">
+              {past.map(
+                ({ year: pastYear, cohort, members: roster }, index) => (
+                  <article
+                    key={pastYear}
+                    // The section label already draws a rule, so the first year
+                    // goes without one of its own.
+                    className={`grid gap-8 lg:grid-cols-[16rem_1fr] lg:gap-12 ${
+                      index === 0 ? "" : "border-t border-rule pt-8"
+                    }`}
+                  >
+                    <div>
+                      <h3 className="font-serif text-3xl tracking-tight text-ink-muted">
+                        {pastYear}
+                      </h3>
 
-            <div className="mt-14 space-y-16">
-              {past.map(({ year: pastYear, cohort, members: roster }) => (
-                <article
-                  key={pastYear}
-                  className="grid gap-8 border-t border-rule pt-8 lg:grid-cols-[16rem_1fr] lg:gap-12"
-                >
-                  <div>
-                    <h3 className="font-serif text-3xl tracking-tight text-ink-muted">
-                      {pastYear}
-                    </h3>
+                      {cohort?.photoUrl ? (
+                        <div className="relative mt-5 aspect-[4/3] overflow-hidden border border-rule">
+                          <Image
+                            src={cohort.photoUrl}
+                            alt={
+                              cohort.photoAlt ??
+                              `The ${pastYear} Urdu Society committee.`
+                            }
+                            fill
+                            sizes="(min-width: 1024px) 16rem, 90vw"
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : null}
+                    </div>
 
-                    {cohort?.photoUrl ? (
-                      <div className="relative mt-5 aspect-[4/3] overflow-hidden border border-rule">
-                        <Image
-                          src={cohort.photoUrl}
-                          alt={
-                            cohort.photoAlt ??
-                            `The ${pastYear} Urdu Society committee.`
-                          }
-                          fill
-                          sizes="(min-width: 1024px) 16rem, 90vw"
-                          className="object-cover"
-                        />
-                      </div>
-                    ) : null}
-
-                    {cohort?.note ? (
-                      <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-                        {cohort.note}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  {/* Name, college and course only — no bios. Keeping the
+                    {/* Name, college and course only - no bios. Keeping the
                       archive this light is what makes it maintainable. */}
-                  <ul className="grid gap-x-10 gap-y-5 sm:grid-cols-2">
-                    {roster.map((person) => (
-                      <li
-                        key={person.id}
-                        className="border-t border-rule/60 pt-4"
-                      >
-                        <p className="text-[0.58rem] tracking-[0.25em] text-ink-muted uppercase">
-                          {person.role}
-                        </p>
-                        <p className="mt-1.5 font-serif text-lg tracking-tight text-ink-muted">
-                          {person.name}
-                        </p>
-                        {person.college || person.course ? (
-                          <p className="mt-0.5 text-xs text-ink-muted/80">
-                            {[person.college, person.course]
-                              .filter(Boolean)
-                              .join(" · ")}
+                    <ul className="grid gap-x-10 gap-y-5 sm:grid-cols-2">
+                      {roster.map((person) => (
+                        <li
+                          key={person.id}
+                          className="border-t border-rule/60 pt-4"
+                        >
+                          <p className="text-[0.58rem] tracking-[0.25em] text-ink-muted uppercase">
+                            {person.role}
                           </p>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
+                          <p className="mt-1.5 font-serif text-lg tracking-tight text-ink-muted">
+                            {person.name}
+                          </p>
+                          {person.college || person.course ? (
+                            <p className="mt-0.5 text-xs text-ink-muted/80">
+                              {[person.college, person.course]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </p>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+                ),
+              )}
             </div>
           </div>
         </section>
       ) : null}
-
-      <section>
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-          <SectionLabel as="h2" className="text-ink-muted">
-            Handover
-          </SectionLabel>
-          <p className="mt-8 max-w-xl leading-relaxed text-ink-muted">
-            Committee roles change hands at the end of Easter term. Outgoing
-            officers: make sure your successor can sign in before you give up
-            your own access, and work through the committee&rsquo;s handover
-            checklist so nothing — the mailing list, the Instagram, the domain —
-            is left behind.
-          </p>
-        </div>
-      </section>
     </>
   );
 }

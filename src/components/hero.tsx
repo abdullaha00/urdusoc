@@ -1,113 +1,75 @@
 import { hero } from "@/lib/content";
-import { ArrowLink, ButtonLink, Diamond, SectionLabel, Urdu } from "@/components/ui";
+import type { Event } from "@/lib/db/schema";
+import { HeroEvents } from "@/components/hero-events";
+import { ButtonLink, Urdu } from "@/components/ui";
 
-export function Hero() {
+export function Hero({ events }: { events: Event[] }) {
   return (
-    <section id="top" className="paper-wash border-b border-rule/70">
-      <div className="mx-auto grid max-w-6xl gap-16 px-5 py-20 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20 lg:py-28">
-        <div>
-          <SectionLabel className="text-ink-muted">{hero.label}</SectionLabel>
+    <section
+      id="top"
+      className="paper-wash relative border-b border-rule/70 bg-paper"
+    >
+      <div className="mx-auto flex w-full max-w-6xl flex-col px-5 py-14 sm:px-8 sm:py-16 lg:min-h-[calc(100svh-4rem)] lg:py-8">
+        <div className="grid flex-1 gap-14 lg:grid-cols-[0.94fr_1.06fr] lg:items-center lg:gap-20">
+          <div className="max-w-xl">
+            <p className="flex items-center gap-3 text-sm font-medium tracking-[0.06em] text-ink-muted">
+              <span aria-hidden className="h-px w-8 shrink-0 bg-gold/70" />
+              {hero.label}
+            </p>
 
-          <h1 className="mt-8">
-            {/* inline-block keeps the right-to-left title on the column's left edge */}
-            <Urdu className="inline-block text-[2.75rem] leading-[1.55] text-forest sm:text-6xl lg:text-7xl">
-              {hero.titleUrdu}
-            </Urdu>
-            <span className="mt-4 block max-w-xl font-serif text-3xl leading-[1.15] tracking-tight text-balance sm:text-4xl lg:text-[2.9rem]">
-              {hero.headline}
-            </span>
-          </h1>
+            <h1 className="mt-7">
+              <Urdu className="inline-block text-[3.1rem] leading-[1.5] text-forest sm:text-6xl lg:text-[4.5rem]">
+                {hero.titleUrdu}
+              </Urdu>
+              <span className="mt-3 block max-w-xl font-serif text-[2.15rem] leading-[1.08] tracking-tight text-balance sm:text-5xl lg:text-[3.35rem]">
+                {hero.headline}
+              </span>
+            </h1>
 
-          <p className="mt-7 max-w-md leading-relaxed text-ink-muted">
-            {hero.supporting}
-          </p>
+            <p className="mt-6 max-w-lg text-[1.05rem] leading-relaxed text-ink-muted">
+              {hero.supporting}
+            </p>
 
-          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
-            <ButtonLink href={hero.primaryCta.href}>
-              {hero.primaryCta.label}
-            </ButtonLink>
-            <ArrowLink
-              href={hero.secondaryCta.href}
-              className="text-ink-muted hover:text-forest"
-            >
-              {hero.secondaryCta.label}
-            </ArrowLink>
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <ButtonLink
+                href={hero.primaryCta.href}
+                className="border border-transparent px-7 py-3.5 text-base"
+              >
+                {hero.primaryCta.label}
+              </ButtonLink>
+
+              <ButtonLink
+                href={hero.secondaryCta.href}
+                variant="outline"
+                className="px-7 py-3.5 text-base"
+              >
+                {hero.secondaryCta.label}
+              </ButtonLink>
+            </div>
           </div>
+
+          <HeroEvents events={events} />
         </div>
 
-        <HeroArtwork />
+        <a
+          href="#iqbal-quote-heading"
+          aria-label="Continue to poetry"
+          className="mx-auto mt-10 hidden h-9 w-9 items-center justify-center text-gold-deep transition-colors hover:text-forest lg:flex"
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 4v14M7.5 13.5 12 18l4.5-4.5" />
+          </svg>
+        </a>
       </div>
     </section>
-  );
-}
-
-/**
- * Nastaliq words ending in a deep bowl (the ن of زبان, the ب of ادب) push ink
- * well below their line box; words ending on the baseline (the ت of ثقافت) do
- * not. Captions are positioned off the line box, not off the ink, so without a
- * per-word nudge the three sit at visibly different heights. Any word not
- * listed falls back to the shallow spacing.
- */
-const deepDescenders = new Set(["زبان", "ادب"]);
-
-/**
- * A CSS-only "title page": stacked sheets of paper with a ruled manuscript
- * frame. Purely decorative, so it is hidden from assistive technology.
- */
-function HeroArtwork() {
-  return (
-    <div
-      aria-hidden
-      className="relative mx-auto w-full max-w-sm select-none lg:max-w-md"
-    >
-      <div className="absolute inset-0 -rotate-3 rounded-sm border border-rule bg-paper-deep/60" />
-      <div className="absolute inset-0 rotate-[1.5deg] rounded-sm border border-rule bg-paper" />
-
-      <div className="relative rounded-sm border border-forest/15 bg-paper p-3 shadow-lift sm:p-4">
-        <div className="relative overflow-hidden border border-gold/40 px-8 py-12 sm:px-12 sm:py-14">
-          <div className="ruled absolute inset-0 opacity-30" />
-
-          {[
-            "left-2 top-2",
-            "right-2 top-2",
-            "left-2 bottom-2",
-            "right-2 bottom-2",
-          ].map((position) => (
-            <span
-              key={position}
-              className={`absolute ${position} size-1.5 rotate-45 bg-gold/70`}
-            />
-          ))}
-
-          <div className="relative flex flex-col items-center">
-            {hero.motifWords.map((word, index) => (
-              <div key={word.urdu} className="flex flex-col items-center">
-                {/* mt is 8px short of mb so the caption above lands mid-gap */}
-                {index > 0 ? <Diamond className="mt-3 mb-5 opacity-70" /> : null}
-                <Urdu className="text-4xl leading-[1.6] text-forest sm:text-5xl">
-                  {word.urdu}
-                </Urdu>
-                {/* -me cancels the trailing letter-space so the word optically centres */}
-                <span
-                  className={`${deepDescenders.has(word.urdu) ? "mt-5" : "mt-1"} -me-[0.3em] text-[0.6rem] tracking-[0.3em] text-ink-muted uppercase`}
-                >
-                  {word.english}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="relative mt-12 flex items-center justify-center gap-3 border-t border-gold/25 pt-5">
-            <span className="-me-[0.3em] text-[0.6rem] tracking-[0.3em] text-gold-deep uppercase">
-              {hero.motifFooter.latin}
-            </span>
-            <Diamond className="opacity-70" />
-            <Urdu className="text-xs leading-none text-gold-deep">
-              {hero.motifFooter.urdu}
-            </Urdu>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

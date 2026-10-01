@@ -20,18 +20,54 @@
   /* Legible gold for small text on the emerald and burgundy panels. */
   --color-gold-light: #d9b473;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
-  --font-nastaliq: var(--font-nastaliq-urdu), "Noto Nastaliq Urdu", serif;
+  --font-sans: var(--theme-font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--theme-font-serif), ui-serif, Georgia, serif;
+  --font-nastaliq: var(--theme-font-urdu), "Noto Nastaliq Urdu", serif;
 
   --shadow-paper: 0 1px 2px rgb(34 32 28 / 0.04), 0 20px 45px -34px rgb(34 32 28 / 0.55);
   --shadow-lift: 0 2px 4px rgb(34 32 28 / 0.05), 0 28px 60px -38px rgb(34 32 28 / 0.6);
 }
 
+html[data-font-theme="A"] {
+  --theme-font-serif: var(--font-newsreader);
+  --theme-font-sans: var(--font-source-sans);
+  --theme-font-urdu: var(--font-gulzar);
+}
+
+html[data-font-theme="current"] {
+  --theme-font-serif: var(--font-cormorant);
+  --theme-font-sans: var(--font-inter);
+  --theme-font-urdu: var(--font-noto-nastaliq);
+}
+
+html[data-font-theme="B"] {
+  --theme-font-serif: var(--font-eb-garamond);
+  --theme-font-sans: var(--font-inter);
+  --theme-font-urdu: var(--font-noto-nastaliq);
+}
+
+html[data-font-theme="C"] {
+  --theme-font-serif: var(--font-instrument-serif);
+  --theme-font-sans: var(--font-instrument-sans);
+  --theme-font-urdu: var(--font-gulzar);
+}
+
+html[data-font-theme="D"] {
+  --theme-font-serif: var(--font-libre-caslon);
+  --theme-font-sans: var(--font-source-sans);
+  --theme-font-urdu: var(--font-noto-nastaliq);
+}
+
+html[data-font-theme="E"] {
+  --theme-font-serif: var(--font-cormorant);
+  --theme-font-sans: var(--font-manrope);
+  --theme-font-urdu: var(--font-gulzar);
+}
+
 /*
  * Alternative palette, from the 2026 committee brief: a sandier ground, softer
  * ink, off-white panels. Switch between this and the default by editing
- * SITE_PALETTE in src/lib/palette.ts — it sets data-palette on <html>.
+ * SITE_PALETTE in src/lib/palette.ts - it sets data-palette on <html>.
  *
  * Only the paper/ink family is redefined. The accents are shifted just enough
  * to sit on the warmer ground without going muddy; the hierarchy they carry is
@@ -44,11 +80,11 @@ html[data-palette="heritage"] {
   --color-ink: #434242;
   /*
    * Darker than the brief's grey. `ink-muted` carries most of the body copy on
-   * this site, and the lighter tone measured 3.97:1 on this ground — under the
+   * this site, and the lighter tone measured 3.97:1 on this ground - under the
    * 4.5:1 AA floor for normal text. This reads as the same colour and clears it.
    */
   --color-ink-muted: #5d5a54;
-  /* The brief's "white" — used for raised panels against the sandy ground. */
+  /* The brief's "white" - used for raised panels against the sandy ground. */
   --color-white: #e1dbd2;
   --color-forest: #16382c;
   --color-forest-soft: #235542;
@@ -213,16 +249,113 @@ html[data-palette="heritage"] {
     }
   }
 
+  /* ---- Hero card (src/components/hero-events.tsx) ----------------------- */
+
+  /*
+   * Turning to the title page shuffles the stack: the two loose sheets swing
+   * wide and settle back onto their resting angles while the top plate lifts
+   * and lands. Each keyframe track ends on the value its Tailwind class
+   * already sets - `-rotate-3`, `rotate-[1.5deg]`, nothing on the plate - so
+   * there is no snap when the animation hands back.
+   *
+   * Tailwind v4 writes these as the standalone `rotate`/`scale` properties
+   * rather than into `transform`, which is why the keyframes can animate them
+   * without restating the class.
+   *
+   * The reduced-motion rule in the base layer flattens all of this to 0.01ms.
+   */
+  .paper-shuffle .paper-sheet-back {
+    animation: paper-sheet-back 520ms cubic-bezier(0.22, 0.85, 0.3, 1);
+  }
+
+  .paper-shuffle .paper-sheet-mid {
+    animation: paper-sheet-mid 520ms cubic-bezier(0.22, 0.85, 0.3, 1);
+  }
+
+  .paper-shuffle .paper-plate {
+    animation: paper-plate 520ms cubic-bezier(0.22, 0.85, 0.3, 1);
+  }
+
+  .paper-shuffle .paper-leaf {
+    animation: paper-leaf 460ms ease-out;
+  }
+
+  @keyframes paper-sheet-back {
+    0% {
+      rotate: -9.5deg;
+      translate: -10px 7px;
+    }
+    60% {
+      rotate: -1.6deg;
+      translate: 2px -2px;
+    }
+    100% {
+      rotate: -3deg;
+      translate: 0 0;
+    }
+  }
+
+  @keyframes paper-sheet-mid {
+    0% {
+      rotate: 7deg;
+      translate: 10px 5px;
+    }
+    60% {
+      rotate: 0.2deg;
+      translate: -2px -2px;
+    }
+    100% {
+      rotate: 1.5deg;
+      translate: 0 0;
+    }
+  }
+
+  @keyframes paper-plate {
+    0% {
+      translate: 0 9px;
+      scale: 0.985;
+    }
+    60% {
+      translate: 0 -3px;
+      scale: 1.005;
+    }
+    100% {
+      translate: 0 0;
+      scale: 1;
+    }
+  }
+
+  /*
+   * Only the page content fades up - the gold frame and corner marks are on
+   * the plate and stay put, so the card never blanks out mid-shuffle.
+   */
+  @keyframes paper-leaf {
+    0% {
+      opacity: 0;
+      translate: 0 7px;
+    }
+    100% {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
   /* ---- Heritage map (src/components/heritage-map.tsx) ------------------- */
 
   /*
-   * Warms the CARTO Positron raster tiles towards the site's palette. The brief
+   * Warms the OpenStreetMap raster tiles towards the site's palette. The brief
    * asked for exact land/river/building hexes, which need vector tiles and
-   * therefore an API key — see the note in heritage-map.tsx. This gets the
+   * therefore an API key - see the note in heritage-map.tsx. This gets the
    * muted, archival feeling without taking on that dependency.
+   *
+   * Tuned harder than it looks like it needs to be: the standard OSM style is
+   * considerably more saturated than the Positron tiles this replaced, so the
+   * pink retail blocks and green parks have to come a long way down before the
+   * map sits quietly under the gold pins.
    */
   .heritage-map .leaflet-tile-pane {
-    filter: sepia(0.32) saturate(0.72) brightness(1.02) hue-rotate(-8deg);
+    filter: sepia(0.42) saturate(0.55) brightness(1.06) contrast(0.92)
+      hue-rotate(-8deg);
   }
 
   .heritage-map .leaflet-container {

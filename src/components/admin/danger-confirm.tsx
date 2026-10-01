@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/form";
 /**
  * Destructive submit that will not fire until the exact phrase is typed.
  *
- * Used where a mis-click cannot be undone — deleting an event takes its
+ * Used where a mis-click cannot be undone - deleting an event takes its
  * registrations with it (`onDelete: "cascade"` in the schema), and erasing a
  * member is a GDPR action we cannot reverse. A native `confirm()` dialog is too
  * easy to dismiss on reflex; typing the name forces a look at what is selected.
@@ -18,7 +18,7 @@ export function DangerConfirm({
   pendingLabel = "Deleting…",
   description,
 }: {
-  /** What the user must type — normally the record's title or email. */
+  /** What the user must type - normally the record's title or email. */
   phrase: string;
   openLabel?: string;
   confirmLabel?: string;

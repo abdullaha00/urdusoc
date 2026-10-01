@@ -1,12 +1,12 @@
 /**
- * Site chrome — the copy that rarely changes and isn't worth an admin screen.
+ * Site chrome - the copy that rarely changes and isn't worth an admin screen.
  *
  * Everything that a committee edits regularly (events, verses, gallery, the
  * committee roster) lives in the database and is edited at /admin. This file is
  * for wording that only changes when the society itself changes.
  *
- * The destinations below are taken from the society's own public listings —
- * see the Cambridge SU page linked in EXTERNAL_LINKS. Check them at handover,
+ * The destinations below are taken from the society's own public listings -
+ * see the Cambridge SU page linked in EXTERNAL_LINKS. Check them each year,
  * since a new committee sometimes moves the Instagram account.
  */
 
@@ -49,7 +49,7 @@ export const navLinks = [
  *
  * ⚠️ The Urdu was supplied by the previous committee's brief, which flagged it
  * as AI-drafted and unverified. Have a fluent reader check both lines before
- * this goes public — see the note at the top of /urdu.
+ * this goes public - see the note at the top of /urdu.
  */
 export const iqbalQuote = {
   lines: [
@@ -65,18 +65,43 @@ export const iqbalQuote = {
   attribution: "Allama Muhammad Iqbal · Trinity College, Cambridge (m. 1905)",
 } as const;
 
+/**
+ * Membership is run by the SU, not by this site: joining means signing up on
+ * the society's Cambridge SU listing, which is where the SU counts members and
+ * takes any fee. Every join button on the site therefore leads off site. The
+ * form that used to do this here is kept in archive/join.
+ *
+ * Defined above `hero` because every join button on the site reads its label
+ * and href from here - the header, the hero, /about, an event page and the
+ * subscribe confirmation. If the wording changes, change it once, here.
+ *
+ * The short name is deliberate: "Join Cambridge University Urdu Society" is a
+ * 37-character button label that wraps to three lines on a phone. The full name
+ * is carried by the header identity line and the footer lockup instead.
+ */
+export const joinCta = {
+  primaryCta: {
+    label: `Join ${society.shortName}`,
+    href: EXTERNAL_LINKS.cambridgeSu,
+  },
+  secondaryCta: { label: "View term card", href: "/events" },
+} as const;
+
 export const hero = {
   label: society.name,
   titleUrdu: society.nameUrdu,
   headline: society.tagline,
   supporting:
-    "Mushairas, conversation evenings and chai socials — open to anyone who loves the language, whether you grew up with it or are hearing your first ghazal.",
-  primaryCta: { label: "Explore upcoming events", href: "/events" },
+    "For Urdu speakers, learners and anyone curious about the language and culture. ",
+  primaryCta: joinCta.primaryCta,
   secondaryCta: {
-    label: "Follow us on Instagram",
+    label: "Instagram",
     href: EXTERNAL_LINKS.instagram,
   },
-  /** Three words set as a manuscript title page in the hero artwork. */
+  /**
+   * Three words set as a manuscript title page, shown in place of the events
+   * panel between terms, when there is nothing upcoming to list.
+   */
   motifWords: [
     { urdu: "زبان", english: "Language" },
     { urdu: "ادب", english: "Literature" },
@@ -85,36 +110,44 @@ export const hero = {
   motifFooter: { latin: "Cambridge", urdu: "کیمبرج" },
 } as const;
 
+/**
+ * Every evening named here actually happened, and is in the archive on /events
+ * with the date and venue it was given. That is the point: a description made
+ * of real nights tells a visitor what this society is in a way no amount of
+ * "unhurried literary discussion" ever did.
+ *
+ * It follows that this copy expires. When the examples are three years stale,
+ * replace them with newer ones from /events rather than reaching for adjectives
+ * - and check the claim still holds before you write it.
+ */
 export const pillars = [
   {
     title: "Poetry",
-    body: "Mushairas, open mics and unhurried literary discussion, from classical ghazal to writing made this term.",
+    body: "Mushairas and open mics: Bazm-e-Yaar in the Hidden Rooms, Iqbal Day at Christ's, and one reading given from three punts on the Cam.",
   },
   {
     title: "Language",
-    body: "Conversation circles and script sessions that welcome complete beginners and fluent speakers alike.",
+    body: "Brunch and baat-cheet speaking classes at Fitzwilliam and King's, charades in Urdu, and a workshop on writing humour in Urdu poetry.",
   },
   {
     title: "Community",
-    body: "Chai socials, film nights and collaborations with societies across Cambridge and beyond.",
+    body: "Chai socials, ghost stories at Jinn-o-ween, screenings of Kamli and Zindagi Tamasha, and evenings shared with PakSoc, Majlis and CamSAMS.",
   },
 ] as const;
 
 export const about = {
   heading: "Three threads run through everything we put on.",
   intro:
-    "UrduSoc has one purpose: to make a place in Cambridge where Urdu is spoken, read and enjoyed. We meet through Michaelmas, Lent and Easter — some evenings are literary, some are simply a pot of chai and good company.",
+    "The Cambridge University Urdu Society has one purpose: to make a place in Cambridge where Urdu is spoken, read and enjoyed. We meet through Michaelmas, Lent and Easter - some evenings are literary, some are simply a pot of chai and good company.",
   membership:
-    "Everything we run is open to members and non-members alike; membership just means you hear about it first, and it helps us pay for the chai.",
+    "Membership is completely free - join via the button below!",
 } as const;
 
-export const joinCta = {
-  heading: "Find your Urdu community in Cambridge.",
-  body: "Membership is open to students, alumni and friends of the society — no prior Urdu needed, only curiosity.",
-  primaryCta: { label: "Join UrduSoc", href: "/join" },
-  secondaryCta: { label: "View term card", href: "/events" },
-} as const;
-
+/**
+ * Only describes who the society is open to - signup happens on the SU page,
+ * so these are no longer a choice anyone makes on this site. Still used by the
+ * archived join form and by the members table's `type` column.
+ */
 export const membershipTiers = [
   {
     id: "student",
@@ -170,7 +203,7 @@ export const footerGroups = [
  * a committee adds regularly.
  *
  * The alt text lists each card's events on purpose. Several of these events are
- * not in the database — the cards printed "TBC" or "Week 3" instead of a date —
+ * not in the database - the cards printed "TBC" or "Week 3" instead of a date -
  * so for those the image is the only record, and its alt text is the only way a
  * screen reader can reach them.
  */
@@ -220,33 +253,13 @@ export const termCards = [
 /**
  * /outreach.
  *
- * Written as placeholders on purpose. The brief asked for the page but supplied
- * no real programmes, and inventing charitable work a society has not done
- * would be a lie that outlives whoever wrote it. Replace each strand with
- * something the society actually ran, or delete it.
+ * The page introduces ways for schools and groups to contact the society.
  */
 export const outreach = {
   intro:
-    "Urdu belongs to more people than a university. Alongside what we run in college, we take the language outwards — and lend a hand where the need has nothing to do with Urdu at all.",
-  strands: [
-    {
-      title: "Schools",
-      body: "Poetry and script workshops with local schools and supplementary classes, pitched at students who hear Urdu at home but have never read it.",
-      status: "Being planned for Michaelmas.",
-    },
-    {
-      title: "Translation",
-      body: "Helping put small pieces of Urdu writing — a letter, a poem, a family document — into English for people who ask.",
-      status: "Ongoing, by request.",
-    },
-    {
-      title: "Beyond the language",
-      body: "Joining other Cambridge societies on work that has nothing to do with Urdu: food-bank collections and street kitchens through the winter.",
-      status: "Termly.",
-    },
-  ],
+    "We’re always open to working with people and organisations beyond the University. If you’re an artist, speaker, cultural organisation, community group, school, charity or society with an idea for Cambridge UrduSoc, we’d love to hear from you.",
   closing:
-    "If you run something we could help with, or want us to bring a workshop to your school or group, write to us — we would rather be asked than guess.",
+    "Whether you have a collaboration in mind, would like to bring something to Cambridge, or simply want to start a conversation, get in touch.",
 } as const;
 
 /**
@@ -258,28 +271,28 @@ export const outreach = {
  */
 export const contact = {
   intro:
-    "Questions about an event, an idea for one, a collaboration, or a press enquiry — all of it comes to the same place, and one of us will reply.",
+    "Questions about an event, an idea for one, a collaboration, or a press enquiry - all of it comes to the same place, and one of us will reply.",
   /** Replace with the committee's Google Form once it exists. */
   enquiryFormUrl: PLACEHOLDER_LINK,
   routes: [
     {
       title: "General enquiries",
-      body: "Anything at all. This reaches the whole committee, so it gets answered even in vacation.",
+      body: "For questions about the society, our events, or anything else.",
     },
     {
       title: "Collaborations",
-      body: "If your society wants to co-host an evening, say roughly what you have in mind and which term you are aiming at.",
+      body: "For societies, organisations, artists, speakers and community groups interested in working with UrduSoc or bringing something to Cambridge.",
     },
     {
       title: "Press and alumni",
-      body: "If you studied here and want to stay in touch, or you are writing about the society, start here.",
+      body: "For press enquiries, former members and alumni who would like to reconnect with the society.",
     },
   ],
 } as const;
 
 export const footer = {
   blurb:
-    "A student-run society for Urdu language, literature and culture, meeting through Michaelmas, Lent and Easter terms.",
+    "A student-run society for Urdu language, literature and culture.",
   motto: "زبان، ادب، ثقافت",
   copyright: `© ${new Date().getFullYear()} ${society.name}. Run by students, for everyone.`,
 } as const;

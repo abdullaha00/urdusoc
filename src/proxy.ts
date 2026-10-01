@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
  *
  * This checks for the presence of a session cookie so signed-out visitors get
  * sent to /login without a database round trip. It deliberately does not verify
- * the session — Next's own guidance is that proxy is not an authorization
+ * the session - Next's own guidance is that proxy is not an authorization
  * layer. The real check is `requireAdmin()` in src/lib/auth/guard.ts, called by
  * every admin page and every admin server action.
  */

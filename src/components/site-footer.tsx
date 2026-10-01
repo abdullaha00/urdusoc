@@ -29,7 +29,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_0.8fr]">
           <div className="sm:col-span-2 lg:col-span-1">
-            {/* Decorative — the society's name is spelled out directly below. */}
+            {/* Decorative - the society's name is spelled out directly below. */}
             <Image
               src="/logo.png"
               alt=""
@@ -58,13 +58,13 @@ export function SiteFooter() {
               theirs to license, so ask them for the file and save it over that
               one. The wording holds either way.
 
-              Deliberately the SU and not the University crest — the University
+              Deliberately the SU and not the University crest - the University
               restricts its arms and name-marks, and a student society needs
               written permission it does not currently have.
             */}
             <a
               href={EXTERNAL_LINKS.cambridgeSu}
-              className="group mt-8 inline-flex items-center gap-3.5 rounded-sm border border-rule bg-paper px-4 py-3 transition-colors duration-200 hover:border-gold"
+              className="group mt-8 inline-flex items-center gap-3.5 border-t border-rule pt-3 transition-colors duration-200 hover:text-wine"
             >
               {/* Decorative: the affiliation is spelled out alongside it. */}
               <Image

@@ -12,7 +12,7 @@ import { iqbalQuote } from "@/lib/content";
  *   1. It respects prefers-reduced-motion. The original drove a mask off raw
  *      scroll position with no opt-out, which is exactly the kind of motion
  *      that triggers vestibular symptoms. Reduced motion gets the finished
- *      quote, static and fully legible — no pin, no wipe, no flight.
+ *      quote, static and fully legible - no pin, no wipe, no flight.
  *   2. Scroll work is deferred to requestAnimationFrame. The original wrote to
  *      `maskImage` on every scroll event, forcing a style recalculation per
  *      event rather than per frame.
@@ -21,7 +21,7 @@ import { iqbalQuote } from "@/lib/content";
  *      couplet is readable rather than invisible.
  *
  * The birds and stars are decorative. The couplet itself is real content in the
- * markup — a <blockquote> that reads correctly with the section unscrolled.
+ * markup - a <blockquote> that reads correctly with the section unscrolled.
  */
 
 /** Lanes the birds fly along, as percentages of the pinned viewport. */
@@ -211,7 +211,7 @@ export function IqbalQuote() {
 }
 
 /**
- * The ghazal this couplet opens — "Sitaron se aage" — is usually rendered
+ * The ghazal this couplet opens - "Sitaron se aage" - is usually rendered
  * "Beyond the stars", so the section keeps a quiet sky behind the text.
  *
  * Positioned with CSS percentages rather than an SVG viewBox: stretching a

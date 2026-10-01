@@ -11,7 +11,7 @@ function createDb(connectionString: string) {
     // PgBouncer in transaction mode, etc).
     prepare: false,
     // One connection per server instance. Serverless functions are already
-    // horizontally scaled, so a pool inside each one buys nothing — and the
+    // horizontally scaled, so a pool inside each one buys nothing - and the
     // local development database (see scripts/dev-db.mts) only accepts one.
     max: 1,
   });

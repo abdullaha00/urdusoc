@@ -1,7 +1,7 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
-import Resend from "next-auth/providers/resend";
+import Google from "next-auth/providers/google";
 import { getDb } from "@/lib/db";
 import {
   accounts,
@@ -10,19 +10,44 @@ import {
   users,
   verificationTokens,
 } from "@/lib/db/schema";
-import { sendEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 
 /**
- * Committee sign-in.
+ * Committee sign-in, through Raven.
  *
- * Magic links rather than OAuth on purpose: there is no Google/Microsoft app
- * registration for a future committee to lose access to, only an allowlist row
- * in our own database.
+ * Raven's current form is OIDC over Google - UIS run it as a Google Workspace
+ * domain and document it as OpenID Connect - so this is the stock Auth.js
+ * Google provider pinned to `cam.ac.uk`. The older ucam-webauth/WLS protocol is
+ * deprecated by UIS and deliberately not used.
+ *
+ * The point of Raven is that the committee has no credential specific to this
+ * site: the only thing they can lose is their University account, which already
+ * has the University's own two-factor in front of it. What we own is the
+ * allowlist, which decides who may sign in at all.
+ *
+ * The trade-off, and it is a real one: there is now a Google OAuth client that a
+ * future committee can lose the keys to. It must belong to a society role
+ * account rather than a graduating student, and if it is ever lost the only way
+ * back in is `SEED_ADMIN_EMAIL` + `npm run db:seed` from a shell. See README.
  *
  * The config is a function so nothing touches the database or reads secrets
- * until a request actually arrives — `next build` must work without them.
+ * until a request actually arrives - `next build` must work without them.
  */
+
+/** The only domain Raven can vouch for. */
+const UNIVERSITY_DOMAIN = "@cam.ac.uk";
+
+/**
+ * How long a committee member stays signed in, idle, before Raven asks again.
+ *
+ * Change this one number to change the policy. It is generous because the
+ * allowlist is re-read on every admin request (see `requireAdmin()`), so
+ * removing someone does not wait for their session to expire - session length
+ * costs us nothing in revocation terms.
+ */
+const SESSION_MAX_AGE_DAYS = 30;
+const SESSION_MAX_AGE = SESSION_MAX_AGE_DAYS * 24 * 60 * 60;
+
 export const { handlers, signIn, signOut, auth } = NextAuth(() => {
   const db = getDb();
 
@@ -31,57 +56,81 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
       usersTable: users,
       accountsTable: accounts,
       sessionsTable: sessions,
+      // Unused now that sign-in is Raven rather than a magic link, but kept so
+      // that adding an email provider back needs no migration.
       verificationTokensTable: verificationTokens,
     }),
-    session: { strategy: "database" },
+    session: {
+      strategy: "database",
+      maxAge: SESSION_MAX_AGE,
+      // Refresh the row at most daily rather than on every request.
+      updateAge: 24 * 60 * 60,
+    },
+    cookies: {
+      /**
+       * Auth.js writes the session cookie with no `maxAge` of its own, which
+       * makes it a browser-session cookie until some later request happens to
+       * refresh it - so quitting the browser signed you out. Setting it here is
+       * what makes staying signed in actually work.
+       *
+       * Only the lifetime is overridden. The *name* must stay the default,
+       * because `src/proxy.ts` looks for it by name.
+       */
+      sessionToken: { options: { maxAge: SESSION_MAX_AGE } },
+    },
     trustHost: true,
     pages: {
       signIn: "/login",
-      verifyRequest: "/login/check-your-email",
       error: "/login",
     },
     providers: [
-      Resend({
-        // The provider builds its client eagerly, so it needs *a* key even when
-        // the message is sent by `sendVerificationRequest` below. Reading
-        // `env.resendApiKey` here would throw before that ever runs, which made
-        // signing in locally impossible — see the note on the override.
-        // Both are placeholders when email is not configured. The provider
-        // needs them to construct, and `auth()` runs on every admin request —
-        // so reading a required() value here would 500 the whole admin rather
-        // than just failing to send. Nothing is sent through this client
-        // anyway; `sendVerificationRequest` below does the work.
-        apiKey: env.resendApiKey ?? "not-used-see-below",
-        from: env.emailFrom ?? "UrduSoc <noreply@urdusoc.invalid>",
-        name: "Email",
-        /**
-         * Sends the magic link through our own wrapper rather than the
-         * provider's default.
-         *
-         * Two reasons: the link arrives on the society's letterhead like every
-         * other message the site sends, and `sendEmail` logs to the console when
-         * there is no RESEND_API_KEY, so a committee developer can sign in
-         * locally without an email account — which is what `src/lib/email.ts`
-         * always promised but auth did not honour.
-         */
-        async sendVerificationRequest({ identifier, url }) {
-          await sendEmail({
-            to: identifier,
-            subject: "Your UrduSoc committee sign-in link",
-            lines: [
-              "Here is your sign-in link for the UrduSoc committee pages.",
-              url,
-              "It can be used once and expires shortly. If you did not ask to sign in, ignore this email.",
-            ],
-          });
+      Google({
+        // Placeholders when Raven is not configured. The provider needs both to
+        // construct, and `auth()` runs on every admin request - so reading a
+        // required() value here would 500 the whole admin rather than just
+        // failing to sign in. `/login` checks `env.ravenEnabled` and says so.
+        clientId: env.googleClientId ?? "raven-not-configured",
+        clientSecret: env.googleClientSecret ?? "raven-not-configured",
+        name: "Raven",
+        authorization: {
+          params: {
+            // Scopes the Google account chooser to the University, so a
+            // committee member with a personal Google account signed in
+            // elsewhere is not offered it. A hint only - `signIn` below is what
+            // actually enforces the domain.
+            hd: "cam.ac.uk",
+            prompt: "select_account",
+          },
         },
+        /**
+         * Needed, not incidental: committee members already have `users` rows
+         * created by the magic-link provider this replaces, and without this
+         * their first Raven sign-in fails with `OAuthAccountNotLinked`.
+         *
+         * "Dangerous" in the general case because an OAuth provider that does
+         * not verify email addresses would let someone claim another user's
+         * account. That does not apply here - we require `email_verified` and a
+         * `cam.ac.uk` address below, and the allowlist decides access
+         * regardless of how the user row came to exist.
+         */
+        allowDangerousEmailAccountLinking: true,
       }),
     ],
     callbacks: {
-      /** Only allowlisted committee addresses may sign in at all. */
-      async signIn({ user }) {
+      /**
+       * Two gates: the address must be a University one that Raven has actually
+       * verified, and it must be on the committee allowlist.
+       *
+       * The domain is checked here rather than trusted from the `hd` parameter
+       * above, which is only a hint on the way *out* to Google and says nothing
+       * about who came back.
+       */
+      async signIn({ user, profile }) {
         const email = user.email?.toLowerCase();
         if (!email) return false;
+        if (profile && profile.email_verified === false) return false;
+        if (!email.endsWith(UNIVERSITY_DOMAIN)) return false;
+
         const [admin] = await db
           .select({ id: admins.id })
           .from(admins)

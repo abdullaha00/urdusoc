@@ -5,7 +5,7 @@
 -- new columns existed and with a bare `kind::event_kind` cast, which fails on
 -- every row holding the removed 'collaboration' value. The order below adds the
 -- columns first, carries the old value across into `is_collaboration`, and only
--- then rewrites the enum — so no row errors and no information is dropped.
+-- then rewrites the enum - so no row errors and no information is dropped.
 
 CREATE TYPE "public"."event_category" AS ENUM('academic', 'cultural', 'social');--> statement-breakpoint
 

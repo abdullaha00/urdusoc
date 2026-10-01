@@ -29,7 +29,20 @@ export function formatEventDate(date: Date): string {
   return `${weekday}, ${dayAndMonth}`;
 }
 
-/** "Friday, 23 October 2026" — for events outside the current year. */
+/**
+ * "Fri 23 Oct" - the compact list in the hero, where the column is too narrow
+ * for the long form above.
+ */
+export function formatEventDateShort(date: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: TIME_ZONE,
+  }).format(date);
+}
+
+/** "Friday, 23 October 2026" - for events outside the current year. */
 export function formatEventDateWithYear(date: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
@@ -53,7 +66,7 @@ export function formatEventTime(date: Date): string {
     .replace("pm", "PM");
 }
 
-/** "October 2026" — gallery and archive groupings. */
+/** "October 2026" - gallery and archive groupings. */
 export function formatMonthYear(date: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     month: "long",
@@ -121,7 +134,7 @@ function londonParts(instant: Date): Record<string, number> {
   return fields;
 }
 
-/** Minutes Europe/London was ahead of UTC at `instant` — 0 in GMT, 60 in BST. */
+/** Minutes Europe/London was ahead of UTC at `instant` - 0 in GMT, 60 in BST. */
 function londonOffsetMinutes(instant: Date): number {
   const f = londonParts(instant);
   const asIfUtc = Date.UTC(f.year, f.month - 1, f.day, f.hour, f.minute, f.second);
@@ -132,7 +145,7 @@ function londonOffsetMinutes(instant: Date): number {
  * Reads a `<input type="datetime-local">` value as a London wall-clock time.
  *
  * The browser sends a zoneless string like "2026-10-23T19:00". Passing that to
- * `new Date()` interprets it in the *server's* zone — UTC on Vercel — so an
+ * `new Date()` interprets it in the *server's* zone - UTC on Vercel - so an
  * October event entered as 7pm would be stored as 7pm UTC and shown as 8pm BST.
  * Returns null when the value is missing or malformed, so callers can validate.
  */

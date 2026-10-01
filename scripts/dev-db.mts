@@ -28,7 +28,20 @@ console.log("Seeding…");
 const summary = await seed(db, process.env.SEED_ADMIN_EMAIL ?? "committee@example.com");
 for (const line of summary) console.log(`  ${line}`);
 
-const server = new PGLiteSocketServer({ db: client, port: PORT, host: "127.0.0.1" });
+/**
+ * PGlite itself is single-connection, and this server defaults to serving one
+ * client at a time - which is not enough in practice: `next dev` holds a
+ * connection, and anything else that wants one (Drizzle Studio and `psql` both
+ * open a pool) is dropped with `read ECONNRESET`. The server multiplexes
+ * concurrent clients over the one underlying connection, so lift the limit
+ * enough that running the site and inspecting the database at once works.
+ */
+const server = new PGLiteSocketServer({
+  db: client,
+  port: PORT,
+  host: "127.0.0.1",
+  maxConnections: 20,
+});
 await server.start();
 
 console.log(`\nDevelopment database listening on port ${PORT}.`);

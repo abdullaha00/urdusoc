@@ -66,13 +66,13 @@ export function VerseForm({ verse }: { verse?: Verse }) {
         label="Translation"
         htmlFor="verse-translation"
         required
-        hint="Plain English. It does not have to scan."
+        hint="Plain English. It does not have to scan. Line breaks are kept, so you can set it out line by line against the Urdu."
         error={state.fieldErrors?.translation}
       >
         <Textarea
           id="verse-translation"
           name="translation"
-          rows={2}
+          rows={4}
           defaultValue={verse?.translation ?? ""}
           required
           aria-invalid={Boolean(state.fieldErrors?.translation)}
@@ -134,7 +134,7 @@ export function VerseForm({ verse }: { verse?: Verse }) {
         label={
           <>
             <span className="font-medium text-ink">Feature on the homepage</span>{" "}
-            — this replaces whichever couplet is there now.
+            - this replaces whichever couplet is there now.
           </>
         }
       />

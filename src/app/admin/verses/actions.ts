@@ -20,17 +20,35 @@ const lines = (label: string) =>
     .string()
     .transform((value) =>
       value
-        .split("\n")
+        .split(/\r\n?|\n/)
         .map((line) => line.trim())
         .filter(Boolean),
     )
     .refine((value) => value.length > 0, `Please give the ${label}.`)
     .refine((value) => value.length <= 12, "That is more lines than a couplet.");
 
+/**
+ * Keeps the line breaks someone typed, and nothing else. Browsers submit
+ * textarea newlines as CRLF, which would otherwise be stored verbatim and
+ * counted against the length limit; trailing spaces and runs of blank lines
+ * are tidied too, since they become visible once the text is rendered with
+ * `whitespace-pre-line`.
+ */
+const multiline = z.string().transform((value) =>
+  value
+    .split(/\r\n?|\n/)
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim(),
+);
+
 const verseSchema = z.object({
   urduLines: lines("Urdu lines"),
   transliterationLines: lines("transliteration"),
-  translation: z.string().trim().min(1, "Please give a translation.").max(600),
+  translation: multiline.pipe(
+    z.string().min(1, "Please give a translation.").max(600),
+  ),
   poetName: z.string().trim().min(1, "Who wrote it?").max(120),
   poetUrdu: z.string().trim().max(120).optional().transform((v) => v || null),
   poetYears: z.string().trim().max(40).optional().transform((v) => v || null),
@@ -68,7 +86,7 @@ export async function saveVerse(
   const data = parsed.data;
 
   try {
-    // One transaction so the site is never left with two featured couplets —
+    // One transaction so the site is never left with two featured couplets -
     // `getFeaturedVerse()` takes the first it finds, which would otherwise be
     // whichever the database happened to return.
     await getDb().transaction(async (tx) => {

@@ -11,10 +11,18 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.mts",
-    "db:import-events": "tsx scripts/import-events.mts",
+    "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.mts",
+    "db:import-events": "tsx --env-file-if-exists=.env.local scripts/import-events.mts",
+    "db:import-committee": "tsx --env-file-if-exists=.env.local scripts/import-committee.mts",
+    "db:import-media": "tsx --env-file-if-exists=.env.local scripts/import-media.mts",
     "db:verify": "tsx scripts/db-verify.mts",
-    "dev:db": "tsx scripts/dev-db.mts"
+    "instagram:archive": "tsx scripts/archive-instagram.mts",
+    "blob:upload": "tsx --env-file-if-exists=.env.local scripts/upload-blob.mts",
+    "media:upload": "tsx --env-file-if-exists=.env.local scripts/upload-media.mts",
+    "sheet:sync": "tsx --env-file-if-exists=.env.local scripts/sync-events.mts",
+    "sheet:headers": "tsx scripts/sheet-headers.mts",
+    "sheet:check": "tsx --env-file-if-exists=.env.local scripts/check-sheet-sync.mts",
+    "dev:db": "tsx --env-file-if-exists=.env.local scripts/dev-db.mts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.3",

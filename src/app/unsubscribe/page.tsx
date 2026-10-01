@@ -29,11 +29,10 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
 
   return (
     <PageHeader
-      label="Mailing list"
       title={done ? "You're unsubscribed." : "We could not find that link."}
       intro={
         done
-          ? "You will not hear from us again unless you sign up afresh. No hard feelings — the door is always open."
+          ? "You will not hear from us again unless you sign up afresh. No hard feelings - the door is always open."
           : "Unsubscribe links come from the footer of our emails. If this one has stopped working, write to the committee and we will remove you by hand."
       }
     >

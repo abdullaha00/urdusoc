@@ -108,7 +108,8 @@ export function SheetSyncPanel({
             ) : (
               "the committee spreadsheet"
             )}
-            , not on this page. The site catches up every fifteen minutes.
+            , not on this page. The site catches up once a day, or now if you
+            press Sync.
             Everything below is a copy - to change an event, change its row.
           </p>
         </div>

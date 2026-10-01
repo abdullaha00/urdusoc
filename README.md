@@ -131,8 +131,8 @@ committee member after that is added through `/admin/access`.
 
 When the `EVENTS_SHEET_*` variables are set, a Google Sheet is the source of
 truth for events. The committee types a term's events into it; the site copies
-them in every fifteen minutes (`vercel.json` → `/api/cron/sync-events`), or
-immediately when someone presses **Sync now** on `/admin/events`. That page
+them in once a day (`vercel.json` → `/api/cron/sync-events`), or immediately
+when someone presses **Sync now** on `/admin/events`. That page
 becomes a read-only view of what the last sync read.
 
 Columns are found by their **heading**, not their position, so the sheet can be
@@ -286,8 +286,9 @@ without it nobody can sign in. It must be a University address
 OAuth client's redirect URIs. Once that first owner is in, the rest of the
 committee is added at `/admin/access` with no further shell access.
 
-`vercel.json` declares the cron job that syncs the events spreadsheet every
-fifteen minutes. Vercel picks it up on the next production deployment and sets
+`vercel.json` declares the cron job that syncs the events spreadsheet daily.
+A Hobby account is limited to one run a day; on Pro, restore the `*/15` the
+sync was written for. Vercel picks it up on the next production deployment and sets
 `CRON_SECRET` itself; the route refuses every request until it does. Cron jobs
 only run against production deployments, so previews never sync - press **Sync
 now** in `/admin/events` if you need a preview to catch up.

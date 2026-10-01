@@ -33,7 +33,7 @@ export function HeroEvents({ events }: { events: Event[] }) {
       <div
         role="group"
         aria-label="Hero card"
-        className="mb-4 flex justify-end gap-5"
+        className="mb-4 flex justify-center gap-5"
       >
         <PanelTab
           id="hero-events-tab"

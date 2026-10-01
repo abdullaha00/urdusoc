@@ -65,8 +65,17 @@ export const buttonBase =
 
 export const buttonVariants = {
   primary: "bg-forest text-paper hover:bg-forest-soft",
+  /*
+    The border carries the whole button - there is no fill to read as an edge -
+    so it has to clear 3:1 against paper, the WCAG minimum for a UI boundary.
+    forest/60 samples 3.31:1 on the archive ground and 3.12:1 on heritage, both
+    measured off a render rather than computed - Tailwind mixes the alpha in
+    oklab, which costs about 0.2 against the sRGB figure. The /25 it used to be
+    was 1.59:1, which left the hero's Instagram button looking like bare text.
+    Heritage has little headroom: re-measure both grounds if you lower this.
+  */
   outline:
-    "border border-forest/25 text-forest hover:border-forest hover:bg-forest/5",
+    "border border-forest/60 text-forest hover:border-forest hover:bg-forest/5",
   light: "bg-paper text-wine-deep hover:bg-white",
   danger: "border border-wine/30 text-wine hover:border-wine hover:bg-wine/5",
 } as const;

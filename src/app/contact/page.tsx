@@ -102,20 +102,34 @@ export default function ContactPage() {
             </dl>
           </div>
 
-          {/* <div className="lg:self-center">
-            <div className="border border-gold/35 bg-paper p-8 shadow-paper sm:p-10">
-              <Urdu className="block text-center text-3xl leading-[1.8] text-forest">
+          {/*
+            The farewell card, parked rather than deleted. Restoring it means
+            uncommenting this and putting `lg:grid-cols-[1fr_1fr]` back on the
+            grid above, which is the only other thing it needs.
+
+            Two things were fixed while it was down, so it comes back ready:
+            the gloss under the transliteration is gone - it explained the
+            phrase to people who did not need it and said nothing to the people
+            who did - and the caption carries `-me-[0.3em]` to cancel the
+            trailing letter-space `tracking-[0.3em]` adds after the last glyph,
+            which otherwise drags the centred line 1.5px left of the Urdu above
+            it. Same fix the hero title page uses on its tracked-out captions.
+            Measured centred: card, Urdu and caption all land on one axis.
+
+            Comments inside this block have to stay prose - a nested JSX
+            comment would close this one early.
+
+          <div className="lg:self-center">
+            <div className="flex flex-col items-center justify-center border border-gold/35 bg-paper p-8 text-center shadow-paper sm:p-10">
+              <Urdu className="block text-3xl leading-[1.8] text-forest">
                 خدا حافظ
               </Urdu>
-              <p className="mt-4 text-center text-[0.65rem] tracking-[0.3em] text-ink-muted uppercase">
+              <p className="-me-[0.3em] mt-4 text-[0.65rem] tracking-[0.3em] text-ink-muted uppercase">
                 Khuda Hafiz
               </p>
-              <p className="mt-6 text-center text-sm leading-relaxed text-ink-muted">
-                A warm and very ordinary Urdu goodbye - closer to &ldquo;may God
-                protect you&rdquo; than to anything formal.
-              </p>
             </div>
-          </div> */}
+          </div>
+          */}
         </div>
       </section>
     </>

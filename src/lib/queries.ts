@@ -1,13 +1,13 @@
 /**
  * Read queries used by the public pages.
  *
- * Everything here is a plain async function calling Drizzle — no caching layer,
+ * Everything here is a plain async function calling Drizzle - no caching layer,
  * because the pages that use them are rendered on demand. Keep it that way
  * unless you have a measured reason not to; cache invalidation is the usual
  * thing that breaks when a committee changes hands.
  */
 
-import { and, asc, count, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   albums,
@@ -28,18 +28,12 @@ import {
 /* Events                                                                      */
 /* -------------------------------------------------------------------------- */
 
-/** The next published event, or null if nothing is scheduled. */
-export async function getNextEvent(): Promise<Event | null> {
-  const [event] = await getDb()
-    .select()
-    .from(events)
-    .where(and(eq(events.published, true), gte(events.startsAt, new Date())))
-    .orderBy(asc(events.startsAt))
-    .limit(1);
-
-  return event ?? null;
-}
-
+/**
+ * Every published event still to come, soonest first.
+ *
+ * Both callers want a list: /events shows the whole programme, and the home
+ * page hero takes the first few off the top.
+ */
 export async function getUpcomingEvents(): Promise<Event[]> {
   return getDb()
     .select()
@@ -48,13 +42,59 @@ export async function getUpcomingEvents(): Promise<Event[]> {
     .orderBy(asc(events.startsAt));
 }
 
-export async function getPastEvents(limit = 12): Promise<Event[]> {
-  return getDb()
+/**
+ * The archive, newest first. Unlimited by default.
+ *
+ * It used to stop at twelve, which was the whole archive at the time. It no
+ * longer is - the events recovered from the society's Instagram take it back to
+ * the launch in March 2022 - and /events shows the lot, so a limit here would
+ * silently cut the archive off at the last dozen evenings.
+ */
+export async function getPastEvents(limit?: number): Promise<Event[]> {
+  const query = getDb()
     .select()
     .from(events)
     .where(and(eq(events.published, true), lt(events.startsAt, new Date())))
-    .orderBy(desc(events.startsAt))
-    .limit(limit);
+    .orderBy(desc(events.startsAt));
+
+  return limit === undefined ? query : query.limit(limit);
+}
+
+export type EventPoster = {
+  id: string;
+  title: string;
+  startsAt: Date;
+  posterUrl: string;
+  posterAlt: string | null;
+  instagramUrl: string | null;
+};
+
+/**
+ * Every published event that has poster art, newest first - the visual archive
+ * on /gallery.
+ *
+ * Only the columns that section prints. A poster is announcement artwork rather
+ * than a photograph of the evening, which is why these are not album rows: the
+ * gallery keeps the two apart and says which is which.
+ */
+export async function getEventPosters(): Promise<EventPoster[]> {
+  const rows = await getDb()
+    .select({
+      id: events.id,
+      title: events.title,
+      startsAt: events.startsAt,
+      posterUrl: events.posterUrl,
+      posterAlt: events.posterAlt,
+      instagramUrl: events.instagramUrl,
+    })
+    .from(events)
+    .where(and(eq(events.published, true), isNotNull(events.posterUrl)))
+    .orderBy(desc(events.startsAt));
+
+  // `isNotNull` above has already done the filtering; this narrows the type.
+  return rows.filter(
+    (row): row is EventPoster => row.posterUrl !== null,
+  );
 }
 
 export async function getEventBySlug(slug: string): Promise<Event | null> {
@@ -172,7 +212,7 @@ export async function getAlbumBySlug(
   return { ...album, photos: albumPhotos, photoCount: albumPhotos.length };
 }
 
-/** Cover image for an album listing — the first photo, if there is one. */
+/** Cover image for an album listing - the first photo, if there is one. */
 export async function getAlbumCovers(
   albumIds: string[],
 ): Promise<Map<string, Photo>> {
@@ -217,7 +257,7 @@ export async function getCommitteeYears(): Promise<string[]> {
  * Past committees, newest year first, with each year's group photo attached.
  *
  * "Past" means `isCurrent` is false rather than "not the newest year", so a
- * committee mid-handover — when both rosters are briefly on the site — does not
+ * committee mid-changeover - when both rosters are briefly on the site - does not
  * see the incoming year appear in the archive as well as at the top.
  *
  * The cohort row is optional: a year can be listed from its roster alone, which

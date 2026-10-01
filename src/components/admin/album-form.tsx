@@ -27,6 +27,7 @@ export function AlbumForm({
   const [state, formAction] = useActionState(saveAlbum, initialState);
   const [slug, setSlug] = useState(album?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(album));
+  const [coverUrl, setCoverUrl] = useState(album?.coverUrl ?? "");
 
   return (
     <form action={formAction} className="flex max-w-3xl flex-col gap-6">
@@ -86,6 +87,22 @@ export function AlbumForm({
         />
       </Field>
 
+      <Field
+        label="Instagram reel"
+        htmlFor="album-reel-url"
+        hint="Optional. Link to the society's original Instagram video."
+        error={state.fieldErrors?.reelUrl}
+      >
+        <Input
+          id="album-reel-url"
+          name="reelUrl"
+          type="url"
+          defaultValue={album?.reelUrl ?? ""}
+          placeholder="https://www.instagram.com/p/…/"
+          aria-invalid={Boolean(state.fieldErrors?.reelUrl)}
+        />
+      </Field>
+
       <div className="grid gap-6 sm:grid-cols-2">
         <Field
           label="Taken on"
@@ -125,6 +142,39 @@ export function AlbumForm({
       </div>
 
       <Field
+        label="Cover image"
+        htmlFor="album-cover-url"
+        hint="Optional URL. Stands in until the album has photographs - for a reel, the cover frame Instagram already shows."
+        error={state.fieldErrors?.coverUrl}
+      >
+        <Input
+          id="album-cover-url"
+          name="coverUrl"
+          value={coverUrl}
+          onChange={(e) => setCoverUrl(e.target.value)}
+          aria-invalid={Boolean(state.fieldErrors?.coverUrl)}
+        />
+      </Field>
+
+      {coverUrl.trim() ? (
+        <Field
+          label="Cover description"
+          htmlFor="album-cover-alt"
+          required
+          hint="What the image shows, rather than the album title - the tile already prints that underneath."
+          error={state.fieldErrors?.coverAlt}
+        >
+          <Input
+            id="album-cover-alt"
+            name="coverAlt"
+            defaultValue={album?.coverAlt ?? ""}
+            required
+            aria-invalid={Boolean(state.fieldErrors?.coverAlt)}
+          />
+        </Field>
+      ) : null}
+
+      <Field
         label="Placeholder motif"
         htmlFor="album-motif"
         hint="Drawn in place of photographs until the album has some."
@@ -148,7 +198,7 @@ export function AlbumForm({
         defaultChecked={album?.published ?? false}
         label={
           <>
-            <span className="font-medium text-ink">Publish</span> — show this
+            <span className="font-medium text-ink">Publish</span> - show this
             album in the public gallery.
           </>
         }

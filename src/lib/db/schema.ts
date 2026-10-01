@@ -2,7 +2,7 @@
  * Database schema.
  *
  * Column names are written out in snake_case so the generated SQL reads plainly
- * for whoever inherits this. Money is always integer pence — never floats.
+ * for whoever inherits this. Money is always integer pence - never floats.
  */
 
 import type { AdapterAccountType } from "next-auth/adapters";
@@ -25,7 +25,7 @@ import {
 
 /**
  * What kind of evening it is. This is the *shape* of the event, and drives the
- * decorative Urdu label — not its colour on /events.
+ * decorative Urdu label - not its colour on /events.
  *
  * "collaboration" is deliberately absent: whether a partner society is involved
  * is an independent axis, held by `events.isCollaboration`. An evening can be a
@@ -144,9 +144,11 @@ export const verificationTokens = pgTable(
 /* -------------------------------------------------------------------------- */
 
 /**
- * Allowlist of addresses permitted to sign in to /admin. Signing in is refused
- * for anyone not listed here, so a leaked magic link to a stranger is useless.
- * Handover: the outgoing president adds the incoming one, then removes their own row.
+ * Allowlist of addresses permitted to sign in to /admin. Raven establishes who
+ * someone is; this decides whether they may sign in. It is refused for anyone
+ * not listed here, so a University account alone gets a stranger nowhere.
+ * Addresses are University ones (crsid@cam.ac.uk) - that is what Raven returns.
+ * The outgoing president adds the incoming one, then removes their own row.
  */
 export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -179,7 +181,7 @@ export const events = pgTable(
     category: eventCategoryEnum("category").notNull().default("cultural"),
     /**
      * True when another society, organisation or institution co-hosts.
-     * Independent of `kind` — see the note on `eventKindEnum`.
+     * Independent of `kind` - see the note on `eventKindEnum`.
      */
     isCollaboration: boolean("is_collaboration").notNull().default(false),
     /**
@@ -195,7 +197,7 @@ export const events = pgTable(
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     /**
-     * False when only the date is known — an event recovered from an old term
+     * False when only the date is known - an event recovered from an old term
      * card, or one whose hour is not fixed yet. The site then shows the date
      * alone rather than printing a start time nobody confirmed.
      */
@@ -207,19 +209,41 @@ export const events = pgTable(
     ticketing: ticketingModeEnum("ticketing").notNull().default("none"),
     pricePence: integer("price_pence").notNull().default(0),
     /**
-     * Pushes the event into the carousel above the grid on /events. When no
-     * event is flagged, the carousel falls back to the nearest upcoming ones,
-     * so the section is never empty — see `getFeaturedEvents`.
+     * Pushes the event into the featured list at the top of /events. When no
+     * event is flagged, that list falls back to the nearest upcoming ones,
+     * so the section is never empty - see `getFeaturedEvents`.
      */
     featured: boolean("featured").notNull().default(false),
-    /** Orders the carousel when several events are featured. Higher wins. */
+    /** Orders the featured list when several events are featured. Higher wins. */
     priority: integer("priority").notNull().default(0),
-    /** Optional poster art. Absent is the normal case — the card is designed
+    /** Optional poster art. Absent is the normal case - the card is designed
      *  to look finished without one. */
     posterUrl: text("poster_url"),
     /** Required by the admin form whenever `posterUrl` is set. */
     posterAlt: text("poster_alt"),
+    /**
+     * Permalink to the society's own Instagram post for this evening, where
+     * there is one. The event rows link out to it, which for most of the
+     * archive is the only place a reader can see more than the card says.
+     *
+     * Only ever our own posts. A partner society's post about a joint evening
+     * is their record of it, not ours to present as this event's page - see
+     * the note on posters in scripts/data/past-events.ts.
+     */
+    instagramUrl: text("instagram_url"),
     published: boolean("published").notNull().default(false),
+    /**
+     * The `key` cell of the row this event came from in the committee's Google
+     * Sheet, which is the source of truth for everything above.
+     *
+     * Null means nobody owns this row but the admin - the events recovered from
+     * old term cards by `npm run db:import-events` are all like this. The sync
+     * only ever touches rows where this is set, so the archive cannot be
+     * unpublished by someone tidying up the spreadsheet.
+     */
+    sheetRowKey: text("sheet_row_key").unique(),
+    /** When the sync last wrote this row. Null for admin-authored events. */
+    sheetSyncedAt: timestamp("sheet_synced_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -229,6 +253,38 @@ export const events = pgTable(
   },
   (table) => [index("events_starts_at_idx").on(table.startsAt)],
 );
+
+/**
+ * One row per run of the Google Sheet sync, kept so /admin/events can show the
+ * committee what the last run did without anyone reading a log.
+ *
+ * Row-level problems live in `problems` rather than failing the run: one
+ * mistyped date in a spreadsheet of thirty events must not stop the other
+ * twenty-nine reaching the site.
+ */
+export const eventSyncRuns = pgTable("event_sync_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  /** "cron" for the scheduled run, "manual" for the button in /admin/events. */
+  trigger: text("trigger").notNull(),
+  /** Who pressed the button, for a manual run. */
+  triggeredByEmail: text("triggered_by_email"),
+  ok: boolean("ok").notNull(),
+  rowsRead: integer("rows_read").notNull().default(0),
+  created: integer("created").notNull().default(0),
+  updated: integer("updated").notNull().default(0),
+  unpublished: integer("unpublished").notNull().default(0),
+  skipped: integer("skipped").notNull().default(0),
+  /** One line per rejected row, already phrased for a non-technical reader. */
+  problems: text("problems").array().notNull().default([]),
+  /** Set when the run failed outright - bad credentials, sheet unreachable. */
+  errorMessage: text("error_message"),
+  startedAt: timestamp("started_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  finishedAt: timestamp("finished_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
 
 export const registrations = pgTable(
   "registrations",
@@ -309,15 +365,29 @@ export const albums = pgTable("albums", {
   slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
   description: text("description"),
+  /** Original society-owned Instagram video for this moment, where available. */
+  reelUrl: text("reel_url"),
   /** Optional link back to the event the photos came from. */
   eventId: uuid("event_id").references(() => events.id, {
     onDelete: "set null",
   }),
   takenOn: timestamp("taken_on", { withTimezone: true }),
   /**
-   * Name of the CSS placeholder drawn when the album has no photos yet
-   * (see src/components/past-moments.tsx). Lets the site look finished before
-   * the committee has uploaded anything.
+   * Thumbnail for an album with no photographs of its own - in practice the
+   * cover frame Instagram already serves for the reel, archived by
+   * `npm run instagram:archive` and uploaded by `npm run media:upload`.
+   *
+   * This is the still Instagram itself publishes for the post, not a frame cut
+   * out of the video: the reel stays on Instagram and the mp4 is never
+   * republished here. A photograph always wins over this - see `AlbumTile`.
+   */
+  coverUrl: text("cover_url"),
+  /** Required alongside `coverUrl`, as `posterAlt` is for an event poster. */
+  coverAlt: text("cover_alt"),
+  /**
+   * Name of the CSS placeholder drawn when the album has neither photographs
+   * nor a cover (see src/components/past-moments.tsx). Lets the site look
+   * finished before the committee has uploaded anything.
    */
   motif: text("motif"),
   published: boolean("published").notNull().default(false),
@@ -336,7 +406,7 @@ export const photos = pgTable(
     url: text("url").notNull(),
     width: integer("width").notNull(),
     height: integer("height").notNull(),
-    /** Required — the admin upload form will not accept a photo without it. */
+    /** Required - the admin upload form will not accept a photo without it. */
     alt: text("alt").notNull(),
     caption: text("caption"),
     orderIndex: integer("order_index").notNull().default(0),
@@ -358,7 +428,7 @@ export const committee = pgTable(
     name: text("name").notNull(),
     nameUrdu: text("name_urdu"),
     /**
-     * Free text, not an enum — roles genuinely change between committees, and
+     * Free text, not an enum - roles genuinely change between committees, and
      * two people may share one ("Co-President"). Nothing here assumes a role
      * appears only once in a year.
      */
@@ -383,7 +453,7 @@ export const committee = pgTable(
  * One row per past committee: the group photo and a line of context.
  *
  * Separate from `committee` because it is per-year, not per-person. Keeping the
- * archive this light is the point — a past year costs one photo and a roster of
+ * archive this light is the point - a past year costs one photo and a roster of
  * names, so there is no reason for a future committee to ever delete one.
  */
 export const committeeCohorts = pgTable("committee_cohorts", {
@@ -424,6 +494,7 @@ export const verses = pgTable("verses", {
 
 export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
+export type EventSyncRun = typeof eventSyncRuns.$inferSelect;
 export type Registration = typeof registrations.$inferSelect;
 export type Member = typeof members.$inferSelect;
 export type Subscriber = typeof subscribers.$inferSelect;

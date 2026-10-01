@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Album, Photo } from "@/lib/db/schema";
 import { ArrowLink, SectionLabel } from "@/components/ui";
 
@@ -65,21 +66,39 @@ export function AlbumTile({
   titleClassName?: string;
   priority?: boolean;
 }) {
+  // A photograph of the evening comes first; the reel's own cover still stands
+  // in for the albums that are kept as reels, and the drawn motif only appears
+  // for an album that has neither.
+  const thumbnail =
+    cover ??
+    (album.coverUrl
+      ? { url: album.coverUrl, alt: album.coverAlt ?? album.title }
+      : null);
+
+  // An album with photographs opens its own page, because there is a grid of
+  // them to look at. An album kept as a reel goes straight to Instagram: its
+  // page would only show this same cover and a link onward, so the tile sends
+  // the reader where the evening actually is. `cover` is the album's first
+  // photograph, so its presence is what tells the two apart.
+  const reel = cover ? null : album.reelUrl;
+  const href = reel ?? `/gallery/${album.slug}`;
+
   return (
     <figure className={`group flex flex-col ${className}`}>
-      <Link
-        href={`/gallery/${album.slug}`}
+      <AlbumLink
+        href={href}
+        external={Boolean(reel)}
         className="flex flex-1 flex-col rounded-sm"
-        aria-label={album.title}
+        label={reel ? `${album.title} - watch on Instagram` : album.title}
       >
         <div
           className={`relative flex-1 overflow-hidden rounded-sm border border-rule ${minHeight}`}
         >
           <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.04]">
-            {cover ? (
+            {thumbnail ? (
               <Image
-                src={cover.url}
-                alt={cover.alt}
+                src={thumbnail.url}
+                alt={thumbnail.alt}
                 fill
                 priority={priority}
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
@@ -90,27 +109,82 @@ export function AlbumTile({
             )}
           </div>
         </div>
-      </Link>
+      </AlbumLink>
       <figcaption className="mt-4 flex items-baseline gap-3">
         <span
           aria-hidden
           className="size-1.5 shrink-0 translate-y-0.5 rotate-45 bg-gold"
         />
         <span>
-          <Link
-            href={`/gallery/${album.slug}`}
+          <AlbumLink
+            href={href}
+            external={Boolean(reel)}
             className={`block font-serif tracking-tight ${titleClassName} text-forest transition-colors duration-200 group-hover:text-forest-soft`}
           >
             {album.title}
-          </Link>
+          </AlbumLink>
           {album.description ? (
             <span className="mt-0.5 block text-xs text-ink-muted">
               {album.description}
             </span>
           ) : null}
+          {/* Said once, under the title, and only where it is not already where
+              the tile leads: a reel album's picture and title both go to
+              Instagram, so a third link to the same post would only be noise.
+              An album with photographs still names its reel, because its own
+              page is what the tile opens. */}
+          {reel ? (
+            <span className="mt-2 block text-xs text-ink-muted">
+              Kept as a reel on Instagram
+            </span>
+          ) : album.reelUrl ? (
+            <ArrowLink href={album.reelUrl} className="mt-3 text-xs text-forest">
+              Watch the reel on Instagram
+            </ArrowLink>
+          ) : null}
         </span>
       </figcaption>
     </figure>
+  );
+}
+
+/**
+ * The tile's link, which leaves the site for an album kept as a reel.
+ *
+ * `next/link` is right for an album page and wrong for Instagram, so the two
+ * cases are kept apart here rather than at each of the tile's two call sites.
+ */
+function AlbumLink({
+  href,
+  external,
+  className,
+  label,
+  children,
+}: {
+  href: string;
+  external: boolean;
+  className: string;
+  label?: string;
+  children: ReactNode;
+}) {
+  if (external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className={className}
+        aria-label={label}
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className} aria-label={label}>
+      {children}
+    </Link>
   );
 }
 
@@ -152,7 +226,7 @@ export function Motif({ name }: { name: string | null }) {
     <div className="absolute inset-0 bg-paper">
       <div className="ruled absolute inset-0 opacity-40" />
       <div className="absolute inset-0 flex items-center justify-center">
-        {/* A single word — khat, "script" — standing in for a photograph. */}
+        {/* A single word - khat, "script" - standing in for a photograph. */}
         <span lang="ur" dir="rtl" className="urdu text-7xl text-forest/30">
           خط
         </span>

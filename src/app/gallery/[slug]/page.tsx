@@ -3,7 +3,6 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Motif } from "@/components/past-moments";
 import { ArrowLink, PageHeader } from "@/components/ui";
-import { formatMonthYear } from "@/lib/format";
 import { getAlbumBySlug } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -33,13 +32,19 @@ export default async function AlbumPage({ params }: PageProps) {
   return (
     <>
       <PageHeader
-        label={album.takenOn ? formatMonthYear(album.takenOn) : "Gallery"}
         title={album.title}
         intro={album.description ?? undefined}
       >
-        <ArrowLink href="/gallery" className="text-ink-muted hover:text-forest">
-          All albums
-        </ArrowLink>
+        <div className="flex flex-wrap gap-x-6 gap-y-3">
+          <ArrowLink href="/gallery" className="text-ink-muted hover:text-forest">
+            All albums
+          </ArrowLink>
+          {album.reelUrl ? (
+            <ArrowLink href={album.reelUrl} className="text-forest">
+              Watch the reel on Instagram
+            </ArrowLink>
+          ) : null}
+        </div>
       </PageHeader>
 
       <section>
@@ -69,12 +74,32 @@ export default async function AlbumPage({ params }: PageProps) {
             </ul>
           ) : (
             <div>
-              <div className="relative aspect-16/9 max-w-3xl overflow-hidden rounded-sm border border-rule">
-                <Motif name={album.motif} />
+              {/* The reel's cover still, where there is one: a frame from the
+                  evening itself reads better than a drawn placeholder, and it
+                  shows what the link above leads to. Portrait, because the
+                  reels are. */}
+              <div
+                className={`relative overflow-hidden rounded-sm border border-rule ${
+                  album.coverUrl ? "aspect-9/16 max-w-sm" : "aspect-16/9 max-w-3xl"
+                }`}
+              >
+                {album.coverUrl ? (
+                  <Image
+                    src={album.coverUrl}
+                    alt={album.coverAlt ?? album.title}
+                    fill
+                    priority
+                    sizes="(max-width: 640px) 100vw, 24rem"
+                    className="object-cover"
+                  />
+                ) : (
+                  <Motif name={album.motif} />
+                )}
               </div>
               <p className="mt-6 max-w-md leading-relaxed text-ink-muted">
-                Photographs from this one have not been uploaded yet. Check back
-                after the next committee meeting.
+                {album.reelUrl
+                  ? "This moment is kept as its original Instagram reel. Follow the link above to watch it."
+                  : "Photographs from this one have not been uploaded yet. Check back after the next committee meeting."}
               </p>
             </div>
           )}

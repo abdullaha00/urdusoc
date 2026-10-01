@@ -1,0 +1,75 @@
+{
+  "note": "Written by npm run media:upload. Read by npm run db:import-media and db:import-committee.",
+  "uploads": [
+    {
+      "sourceFile": "2026-09-28-Dd1QEVxjUBE-01.jpg",
+      "url": "https://us8vfk8po8cyvo84.public.blob.vercel-storage.com/committee/2026-27/aahad-saddat-card.jpg",
+      "pathname": "committee/2026-27/aahad-saddat-card.jpg",
+      "bytes": 303440,
+      "width": 1080,
+      "height": 1350,
+      "sha256": "088914e0bf33175e19b6342433c6430ac8726f8e6475a47391c48470d796e245",
+      "uploadedAt": "2026-10-01T18:15:08.019Z"
+    },
+    {
+      "sourceFile": "2026-09-28-Dd1QSwADWWT-01.jpg",
+      "url": "https://us8vfk8po8cyvo84.public.blob.vercel-storage.com/committee/2026-27/abdullah-akram-card.jpg",
+      "pathname": "committee/2026-27/abdullah-akram-card.jpg",
+      "bytes": 368729,
+      "width": 1080,
+      "height": 1350,
+      "sha256": "8c0080753459e72d6941ac6ed22795d65b5929ae880fa700829908d42d2762cb",
+      "uploadedAt": "2026-10-01T18:15:09.277Z"
+    },
+    {
+      "sourceFile": "2026-09-28-Dd1QiTgDX9B-01.jpg",
+      "url": "https://us8vfk8po8cyvo84.public.blob.vercel-storage.com/committee/2026-27/daheem-khan-card.jpg",
+      "pathname": "committee/2026-27/daheem-khan-card.jpg",
+      "bytes": 311407,
+      "width": 1080,
+      "height": 1350,
+      "sha256": "f06c40e3e8f8abdee9f2864f8f708eb3b35bb3bd33e22f8cbfe7b96148cd113f",
+      "uploadedAt": "2026-10-01T18:15:10.675Z"
+    },
+    {
+      "sourceFile": "2026-09-28-Dd1P2CmjVA1-01.jpg",
+      "url": "https://us8vfk8po8cyvo84.public.blob.vercel-storage.com/committee/2026-27/zayna-mian-card.jpg",
+      "pathname": "committee/2026-27/zayna-mian-card.jpg",
+      "bytes": 375801,
+      "width": 1080,
+      "height": 1350,
+      "sha256": "871255da27ff28a68325278970146dec44fbb01daf771a2b88d27757d7bb7ec9",
+      "uploadedAt": "2026-10-01T18:15:06.367Z"
+    },
+    {
+      "sourceFile": "2022-06-12-CesxZLaooP1-01.jpg",
+      "url": "https://us8vfk8po8cyvo84.public.blob.vercel-storage.com/gallery/bazm-e-adab-shayari-2022/cover.jpg",
+      "pathname": "gallery/bazm-e-adab-shayari-2022/cover.jpg",
+      "bytes": 128935,
+      "width": 720,
+      "height": 1280,
+      "sha256": "168e0f72c7d1b8489eecb7e132d5929c9579de3ce615421f1b8beb1d4518dd0d",
+      "uploadedAt": "2026-10-01T18:35:52.330Z"
+    },
+    {
+      "sourceFile": "2026-02-16-DU0CApTDZz3-01.jpg",
+      "url": "https://us8vfk8po8cyvo84.public.blob.vercel-storage.com/gallery/faiz-progressive-writers-teach-in-2026/cover.jpg",
+      "pathname": "gallery/faiz-progressive-writers-teach-in-2026/cover.jpg",
+      "bytes": 54572,
+      "width": 720,
+      "height": 1280,
+      "sha256": "40de171a1f7038ec35cd9ba6847b6096742b07cd489d5d744b8e84afe1cdf083",
+      "uploadedAt": "2026-10-01T18:35:54.610Z"
+    },
+    {
+      "sourceFile": "2023-06-17-Ctmp5JgAKIK-01.jpg",
+      "url": "https://us8vfk8po8cyvo84.public.blob.vercel-storage.com/gallery/poetry-on-the-river-2023/cover.jpg",
+      "pathname": "gallery/poetry-on-the-river-2023/cover.jpg",
+      "bytes": 558039,
+      "width": 720,
+      "height": 1280,
+      "sha256": "d201d0ebb2ea04f8f2ce2d242ea21c22a2f846fff8ccc68261a99c8ccab116ae",
+      "uploadedAt": "2026-10-01T18:35:54.037Z"
+    }
+  ]
+}

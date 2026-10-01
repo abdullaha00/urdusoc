@@ -26,9 +26,9 @@ const KINDS = [
 
 /** The colour axis. See EVENT_CATEGORIES for what each one means publicly. */
 const CATEGORIES = [
-  { value: "academic", label: "Academic — it teaches" },
-  { value: "cultural", label: "Cultural — it performs" },
-  { value: "social", label: "Social — it gathers" },
+  { value: "academic", label: "Academic - it teaches" },
+  { value: "cultural", label: "Cultural - it performs" },
+  { value: "social", label: "Social - it gathers" },
 ] as const;
 
 export function EventForm({ event }: { event?: Event }) {
@@ -89,9 +89,9 @@ export function EventForm({ event }: { event?: Event }) {
       </div>
 
       <Field
-        label="Web address"
+        label="Slug"
         htmlFor="event-slug"
-        hint={`The event will live at /events/${slug || "…"}`}
+        hint="Identifies the event. Per-event pages are switched off for now, so this is not a live web address."
         error={state.fieldErrors?.slug}
       >
         <Input
@@ -136,7 +136,7 @@ export function EventForm({ event }: { event?: Event }) {
       <Field
         label="Category"
         htmlFor="event-category"
-        hint="Sets the colour on the events page. Separate from Kind — a mushaira held with another society is Cultural and a collaboration."
+        hint="Sets the colour on the events page. Separate from Kind - a mushaira held with another society is Cultural and a collaboration."
         error={state.fieldErrors?.category}
       >
         <Select
@@ -158,7 +158,7 @@ export function EventForm({ event }: { event?: Event }) {
         onChange={(e) => setIsCollaboration(e.target.checked)}
         label={
           <>
-            <span className="font-medium text-ink">Collaboration</span> — held
+            <span className="font-medium text-ink">Collaboration</span> - held
             jointly with another society, organisation or institution.
           </>
         }
@@ -168,7 +168,7 @@ export function EventForm({ event }: { event?: Event }) {
         <Field
           label="Co-hosts"
           htmlFor="event-collaborators"
-          hint="Comma separated, e.g. PakSoc, Majlis. Leave blank if the partner isn't settled — the card just says 'In collaboration'."
+          hint="Comma separated, e.g. PakSoc, Majlis. Leave blank if the partner isn't settled - the card just says 'In collaboration'."
           error={state.fieldErrors?.collaborators}
         >
           <Input
@@ -249,7 +249,7 @@ export function EventForm({ event }: { event?: Event }) {
       <Field
         label="Venue"
         htmlFor="event-venue"
-        hint="Leave blank if the room isn't booked yet — the site omits it rather than showing a gap."
+        hint="Leave blank if the room isn't booked yet - the site omits it rather than showing a gap."
         error={state.fieldErrors?.venue}
       >
         <Input
@@ -265,7 +265,7 @@ export function EventForm({ event }: { event?: Event }) {
         defaultChecked={event ? !event.showTime : false}
         label={
           <>
-            <span className="font-medium text-ink">Time not confirmed</span> —
+            <span className="font-medium text-ink">Time not confirmed</span> -
             show the date only. Use this for events recovered from an old term
             card, or when the hour isn&rsquo;t settled.
           </>
@@ -349,14 +349,30 @@ export function EventForm({ event }: { event?: Event }) {
         </Field>
       ) : null}
 
+      <Field
+        label="Instagram post"
+        htmlFor="event-instagram-url"
+        hint="Optional. The society's own post for this evening - the event appears with a link to it. Leave blank for a partner society's post."
+        error={state.fieldErrors?.instagramUrl}
+      >
+        <Input
+          id="event-instagram-url"
+          name="instagramUrl"
+          type="url"
+          defaultValue={event?.instagramUrl ?? ""}
+          placeholder="https://www.instagram.com/p/…/"
+          aria-invalid={Boolean(state.fieldErrors?.instagramUrl)}
+        />
+      </Field>
+
       <Checkbox
         name="featured"
         checked={featured}
         onChange={(e) => setFeatured(e.target.checked)}
         label={
           <>
-            <span className="font-medium text-ink">Feature</span> — put this in
-            the carousel at the top of the events page. If nothing is featured,
+            <span className="font-medium text-ink">Feature</span> - put this at
+            the top of the events page. If nothing is featured,
             the soonest events appear there automatically.
           </>
         }
@@ -366,7 +382,7 @@ export function EventForm({ event }: { event?: Event }) {
         <Field
           label="Priority"
           htmlFor="event-priority"
-          hint="Orders the carousel when several events are featured — higher shows first. Leave at 0 if you don't mind."
+          hint="Orders the featured list when several events are featured - higher shows first. Leave at 0 if you don't mind."
           error={state.fieldErrors?.priority}
         >
           <Input
@@ -385,7 +401,7 @@ export function EventForm({ event }: { event?: Event }) {
         defaultChecked={event?.published ?? false}
         label={
           <>
-            <span className="font-medium text-ink">Publish</span> — show this on
+            <span className="font-medium text-ink">Publish</span> - show this on
             the public site. Leave unticked to keep it as a draft.
           </>
         }

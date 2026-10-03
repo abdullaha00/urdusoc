@@ -10,7 +10,7 @@
 
 import "server-only";
 
-import { asc, count, desc, eq, sql } from "drizzle-orm";
+import { asc, count, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   admins,
@@ -45,7 +45,7 @@ export async function getAdminEvents(): Promise<AdminEvent[]> {
     .from(events)
     .leftJoin(registrations, eq(registrations.eventId, events.id))
     .groupBy(events.id)
-    .orderBy(desc(events.startsAt));
+    .orderBy(sql`${events.startsAt} desc nulls last`);
 
   return rows.map((row) => ({ ...row.event, seatsTaken: row.seatsTaken }));
 }
@@ -201,9 +201,9 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
       .select({ event: events, seatsTaken: seatsTakenSql })
       .from(events)
       .leftJoin(registrations, eq(registrations.eventId, events.id))
-      .where(sql`${events.startsAt} >= now()`)
+      .where(or(gte(events.startsAt, new Date()), isNull(events.startsAt)))
       .groupBy(events.id)
-      .orderBy(asc(events.startsAt))
+      .orderBy(sql`${events.startsAt} asc nulls last`)
       .limit(1),
     db.select({ value: count() }).from(events).where(eq(events.published, false)),
     db.select({ value: count() }).from(albums).where(eq(albums.published, false)),

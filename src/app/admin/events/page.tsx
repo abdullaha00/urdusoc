@@ -44,8 +44,12 @@ export default async function AdminEventsPage({
     getLatestSyncRun(),
   ]);
 
-  const upcoming = events.filter((event) => !isPast(event.startsAt));
-  const past = events.filter((event) => isPast(event.startsAt));
+  const upcoming = events.filter(
+    (event) => event.startsAt === null || !isPast(event.startsAt),
+  );
+  const past = events.filter(
+    (event) => event.startsAt !== null && isPast(event.startsAt),
+  );
 
   return (
     <>
@@ -136,9 +140,13 @@ function EventRows({
           </Td>
 
           <Td className="whitespace-nowrap text-ink-muted">
-            {formatEventDateWithYear(event.startsAt)}
+            {event.startsAt ? formatEventDateWithYear(event.startsAt) : "TBC"}
             <span className="mt-0.5 block text-xs">
-              {event.showTime ? formatEventTime(event.startsAt) : "Time not set"}
+              {event.startsAt === null
+                ? "Date and time not set"
+                : event.showTime
+                  ? formatEventTime(event.startsAt)
+                  : "Time not set"}
             </span>
           </Td>
 

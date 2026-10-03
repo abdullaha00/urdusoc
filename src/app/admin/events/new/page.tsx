@@ -28,7 +28,8 @@ export default async function NewEventPage() {
           <p>
             Add a row to the spreadsheet, give it a{" "}
             <strong className="font-medium text-ink">Key</strong> nothing else
-            uses, and fill in at least the title, summary and date. Set{" "}
+            uses, and fill in at least the title, summary and date. The date
+            may be <em>TBC</em>. Set{" "}
             <strong className="font-medium text-ink">Published</strong> to{" "}
             <em>yes</em> when it is ready to go out - the site picks it up
             within fifteen minutes, or straight away if you press{" "}

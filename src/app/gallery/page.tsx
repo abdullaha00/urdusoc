@@ -139,12 +139,16 @@ function PosterTile({ poster }: { poster: EventPoster }) {
         <span className="block font-serif text-sm leading-snug tracking-tight text-balance">
           {poster.title}
         </span>
-        <time
-          dateTime={toDateAttribute(poster.startsAt)}
-          className="mt-0.5 block text-xs text-ink-muted"
-        >
-          {formatEventDateWithYear(poster.startsAt)}
-        </time>
+        {poster.startsAt ? (
+          <time
+            dateTime={toDateAttribute(poster.startsAt)}
+            className="mt-0.5 block text-xs text-ink-muted"
+          >
+            {formatEventDateWithYear(poster.startsAt)}
+          </time>
+        ) : (
+          <span className="mt-0.5 block text-xs text-ink-muted">TBC</span>
+        )}
       </figcaption>
     </figure>
   );

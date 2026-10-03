@@ -223,7 +223,9 @@ export function EventForm({ event }: { event?: Event }) {
             name="startsAt"
             type="datetime-local"
             required
-            defaultValue={event ? toDateTimeLocalValue(event.startsAt) : ""}
+            defaultValue={
+              event?.startsAt ? toDateTimeLocalValue(event.startsAt) : ""
+            }
             aria-invalid={Boolean(state.fieldErrors?.startsAt)}
           />
         </Field>

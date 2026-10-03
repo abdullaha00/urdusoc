@@ -153,8 +153,8 @@ present; everything else is optional.
 | Column | Notes |
 | --- | --- |
 | `Title`, `Summary` | Required. Summary is one sentence, capped at 300 characters - it is printed on a small card. |
-| `Date` | Required. `2026-10-23`, `23/10/2026` or `23 October 2026`. **Numeric dates are read day-first**, so `05/06/2026` is 5 June. |
-| `Start time` | `19:00` or `7pm`. Leave blank when the hour is not fixed - the site then shows the date alone rather than inventing a time. |
+| `Date` | Required. Use `TBC` until the date is settled, or enter `2026-10-23`, `23/10/2026` or `23 October 2026`. TBC events appear after dated upcoming events. **Numeric dates are read day-first**, so `05/06/2026` is 5 June. |
+| `Start time` | `19:00` or `7pm`. Leave blank or use `TBC` when the hour is not fixed. If the date is TBC, the start time, end date and end time must also be blank or TBC. |
 | `Venue` | |
 | `Kind` | `mushaira`, `social`, `workshop` or `talk` - a label on the event page. Defaults to `mushaira`. |
 | `Category` | `academic`, `cultural` or `social` - the colour on `/events` and its legend. Defaults to `cultural`. |
@@ -191,7 +191,9 @@ eventually its door list, to whichever event sorted into its place.
 
 The cost is that **editing a title or a date makes a different event.** The old
 one is unpublished and left behind; a new one appears at a new address. Fixing
-a typo in a title is therefore not a small edit.
+a typo in a title is therefore not a small edit. Replacing `TBC` with a date
+also counts as a date edit, so give an event a `Key` before doing that if it
+must remain the same database row.
 
 Two ways out when that matters:
 

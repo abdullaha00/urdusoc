@@ -117,6 +117,14 @@ function PanelTab({
  * `<time>` still carries the full start instant when the hour is known.
  */
 function EventWhen({ event }: { event: Event }) {
+  if (!event.startsAt) {
+    return (
+      <div className="text-sm font-semibold leading-snug text-forest sm:text-[0.95rem]">
+        TBC
+      </div>
+    );
+  }
+
   const time = event.showTime
     ? formatEventTimeRange(event.startsAt, event.endsAt)
     : null;

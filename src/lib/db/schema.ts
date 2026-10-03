@@ -194,12 +194,12 @@ export const events = pgTable(
     summary: text("summary").notNull(),
     /** Optional long description (Markdown). */
     body: text("body"),
-    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    /** Null when the date is still TBC. */
+    startsAt: timestamp("starts_at", { withTimezone: true }),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     /**
-     * False when only the date is known - an event recovered from an old term
-     * card, or one whose hour is not fixed yet. The site then shows the date
-     * alone rather than printing a start time nobody confirmed.
+     * False when the date or hour is not fixed. A null `startsAt` means the
+     * date is TBC; otherwise the site shows the date without an invented time.
      */
     showTime: boolean("show_time").notNull().default(true),
     /** Null when the venue was never recorded. Old term cards rarely gave one. */

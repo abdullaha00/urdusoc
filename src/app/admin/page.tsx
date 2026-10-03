@@ -51,8 +51,10 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
                   {nextEvent.title}
                 </Link>
                 <p className="mt-2 text-sm text-ink-muted">
-                  {formatEventDateWithYear(nextEvent.startsAt)}
-                  {nextEvent.showTime
+                  {nextEvent.startsAt
+                    ? formatEventDateWithYear(nextEvent.startsAt)
+                    : "Date TBC"}
+                  {nextEvent.startsAt && nextEvent.showTime
                     ? ` at ${formatEventTime(nextEvent.startsAt)}`
                     : null}
                   {nextEvent.venue ? ` · ${nextEvent.venue}` : null}

@@ -190,16 +190,56 @@ check("slug carries the date", a?.slug, "check-mushaira-2026-10-23");
 check("venue stored", a?.venue, "Trinity Old Combination Room");
 // 23 October 2026 is BST, so 7pm London is 18:00Z. Getting this wrong is the
 // single most likely bug in the whole feature.
-check("7pm BST stored as 18:00Z", a?.startsAt.toISOString(), "2026-10-23T18:00:00.000Z");
+check("7pm BST stored as 18:00Z", a?.startsAt?.toISOString(), "2026-10-23T18:00:00.000Z");
 check("end time stored", a?.endsAt?.toISOString(), "2026-10-23T20:00:00.000Z");
 check("no start time means showTime false", b?.showTime, false);
-check("midday stored for a date-only row", b?.startsAt.toISOString(), "2026-11-05T12:00:00.000Z");
+check("midday stored for a date-only row", b?.startsAt?.toISOString(), "2026-11-05T12:00:00.000Z");
 check("no bookings without a Ticketing column", a?.ticketing, "none");
 check("uncapped without a Capacity column", a?.capacity, null);
 
 /* -------------------------------------------------------------------------- */
 
+console.log("\nTBC details\n");
+
+await cleanUp();
+
+report = await syncEventsFromSheet({
+  trigger: "manual",
+  readValues: sheetOf([
+    row({
+      Title: "Check Chai and Chat",
+      Summary: "TBC",
+      Date: "TBC",
+      "Start time": "TBC",
+      "End time": "TBC",
+      Venue: "TBC",
+      Kind: "social",
+      Category: "social",
+      Published: "TRUE",
+    }),
+  ]),
+});
+
+check("TBC row created", report.created, 1);
+check("TBC row has no problems", report.problems, []);
+rows = await ownedEvents();
+const tbc = rows[0];
+check("TBC date stored without an invented date", tbc?.startsAt, null);
+check("TBC time is hidden", tbc?.showTime, false);
+check("TBC identity is stable", tbc?.sheetRowKey, "check-chai-and-chat-tbc");
+check("other TBC text is kept", [tbc?.summary, tbc?.venue], ["TBC", "TBC"]);
+check("TBC row can be published", tbc?.published, true);
+
+/* -------------------------------------------------------------------------- */
+
 console.log("\nEditing a row that keeps its title and date\n");
+
+await cleanUp();
+
+await syncEventsFromSheet({
+  trigger: "manual",
+  readValues: sheetOf([row(MUSHAIRA), row(CHAI)]),
+});
 
 report = await syncEventsFromSheet({
   trigger: "manual",

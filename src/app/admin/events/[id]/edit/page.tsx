@@ -152,10 +152,12 @@ function SheetEventView({ event }: { event: AdminEvent }) {
         ) : null}
         <Row label="Summary">{event.summary}</Row>
         <Row label="When">
-          {formatEventDateWithYear(event.startsAt)}
-          {event.showTime ? `, ${formatEventTime(event.startsAt)}` : ""}
+          {event.startsAt ? formatEventDateWithYear(event.startsAt) : "TBC"}
+          {event.startsAt && event.showTime
+            ? `, ${formatEventTime(event.startsAt)}`
+            : ""}
           {event.endsAt ? ` – ${formatEventTime(event.endsAt)}` : ""}
-          {event.showTime ? "" : " (time not set)"}
+          {event.startsAt && !event.showTime ? " (time not set)" : ""}
         </Row>
         <Row label="Venue">{event.venue ?? "Not recorded"}</Row>
         <Row label="Kind">{event.kind}</Row>

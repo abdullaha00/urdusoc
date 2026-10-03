@@ -156,6 +156,8 @@ function PriceNote({
 }
 
 function DateLine({ event, className = "" }: { event: Event; className?: string }) {
+  if (!event.startsAt) return <span className={className}>TBC</span>;
+
   // `endsAt` without an hour for the start cannot happen - both the sheet and
   // the admin form refuse it - but the range is gated on `showTime` all the
   // same, since that is what decides whether this line talks about hours at all.

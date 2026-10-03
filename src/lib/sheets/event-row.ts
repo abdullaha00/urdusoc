@@ -201,6 +201,11 @@ export function parseSheetDate(input: string): string | null {
   return null;
 }
 
+/** A deliberate placeholder, distinct from an empty required cell or typo. */
+function isTbc(input: string): boolean {
+  return input.trim().toLowerCase() === "tbc";
+}
+
 /**
  * Rejects a date that parsed but does not exist - 31 February, month 13.
  *
@@ -327,6 +332,7 @@ const rowSchema = z
       .trim()
       .min(1, "Date is blank.")
       .transform((value, ctx) => {
+        if (isTbc(value)) return null;
         const parsed = parseSheetDate(value);
         if (!parsed) {
           ctx.addIssue({
@@ -338,7 +344,7 @@ const rowSchema = z
         return parsed;
       }),
     startTime: z.string().trim().transform((value, ctx) => {
-      if (!value) return null;
+      if (!value || isTbc(value)) return null;
       const parsed = parseSheetTime(value);
       if (!parsed) {
         ctx.addIssue({
@@ -350,7 +356,7 @@ const rowSchema = z
       return parsed;
     }),
     endDate: z.string().trim().transform((value, ctx) => {
-      if (!value) return null;
+      if (!value || isTbc(value)) return null;
       const parsed = parseSheetDate(value);
       if (!parsed) {
         ctx.addIssue({
@@ -362,7 +368,7 @@ const rowSchema = z
       return parsed;
     }),
     endTime: z.string().trim().transform((value, ctx) => {
-      if (!value) return null;
+      if (!value || isTbc(value)) return null;
       const parsed = parseSheetTime(value);
       if (!parsed) {
         ctx.addIssue({
@@ -473,10 +479,20 @@ const rowSchema = z
   })
   .refine((row) => row.endTime === null || row.startTime !== null, {
     message: "End time is set but start time is blank.",
-  });
+  })
+  .refine(
+    (row) =>
+      row.date !== null ||
+      (row.startTime === null && row.endDate === null && row.endTime === null),
+    {
+      message:
+        "Date is TBC, so Start time, End date and End time must be blank or TBC.",
+    },
+  );
 
 /**
- * What ties a spreadsheet row to a database row: its title and its date.
+ * What ties a spreadsheet row to a database row: its title and its date, or
+ * the word "tbc" while the date is unknown.
  *
  * Derived rather than typed, so there is no bookkeeping column to maintain and
  * nothing to get wrong. Crucially it is *not* the row's position - a
@@ -520,7 +536,7 @@ export type ParsedEventRow = {
     collaborators: string[];
     summary: string;
     body: string | null;
-    startsAt: Date;
+    startsAt: Date | null;
     endsAt: Date | null;
     showTime: boolean;
     venue: string | null;
@@ -591,12 +607,13 @@ export function parseEventRow(
 
   // No start time means the hour was never fixed. Midday is stored so the row
   // sorts onto the right calendar day in any timezone, and `showTime` tells the
-  // site to print the date alone - the same convention db:import-events uses.
-  const showTime = data.startTime !== null;
-  const startsAt = parseLondonDateTime(
-    `${data.date}T${data.startTime ?? "12:00"}`,
-  );
-  if (!startsAt) {
+  // site to print the date alone. A TBC date stays null and sorts after dated
+  // upcoming events.
+  const showTime = data.date !== null && data.startTime !== null;
+  const startsAt = data.date
+    ? parseLondonDateTime(`${data.date}T${data.startTime ?? "12:00"}`)
+    : null;
+  if (data.date && !startsAt) {
     return {
       ok: false,
       problems: [`Row ${rowNumber}: could not read "${data.date}" as a date.`],
@@ -604,7 +621,7 @@ export function parseEventRow(
   }
 
   let endsAt: Date | null = null;
-  if (data.endTime) {
+  if (data.endTime && startsAt && data.date) {
     const endDate = data.endDate ?? data.date;
     endsAt = parseLondonDateTime(`${endDate}T${data.endTime}`);
     if (!endsAt) {
@@ -629,7 +646,7 @@ export function parseEventRow(
   // Carries the date because titles repeat across terms - two "Chai and
   // Chat!", two iftar potlucks. Without it the second would collide with the
   // first and be reported as a duplicate every single run.
-  const identity = identityFor(data.title, data.date);
+  const identity = identityFor(data.title, data.date ?? "tbc");
 
   const slug = data.slug ? slugify(data.slug, "event") : identity;
 

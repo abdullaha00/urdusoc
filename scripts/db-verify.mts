@@ -50,8 +50,8 @@ check(
 );
 check(
   "event starts 7pm UK time on 23 Oct 2026",
-  events[0]?.startsAt.toISOString() === "2026-10-23T18:00:00.000Z",
-  events[0]?.startsAt.toISOString(),
+  events[0]?.startsAt?.toISOString() === "2026-10-23T18:00:00.000Z",
+  events[0]?.startsAt?.toISOString(),
 );
 
 const featured = await db

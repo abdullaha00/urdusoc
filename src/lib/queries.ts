@@ -7,7 +7,19 @@
  * thing that breaks when a committee changes hands.
  */
 
-import { and, asc, count, desc, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   albums,
@@ -29,7 +41,8 @@ import {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Every published event still to come, soonest first.
+ * Every published event still to come, soonest first, followed by events whose
+ * date is TBC.
  *
  * Both callers want a list: /events shows the whole programme, and the home
  * page hero takes the first few off the top.
@@ -38,8 +51,13 @@ export async function getUpcomingEvents(): Promise<Event[]> {
   return getDb()
     .select()
     .from(events)
-    .where(and(eq(events.published, true), gte(events.startsAt, new Date())))
-    .orderBy(asc(events.startsAt));
+    .where(
+      and(
+        eq(events.published, true),
+        or(isNull(events.startsAt), gte(events.startsAt, new Date())),
+      ),
+    )
+    .orderBy(sql`${events.startsAt} asc nulls last`);
 }
 
 /**
@@ -63,7 +81,7 @@ export async function getPastEvents(limit?: number): Promise<Event[]> {
 export type EventPoster = {
   id: string;
   title: string;
-  startsAt: Date;
+  startsAt: Date | null;
   posterUrl: string;
   posterAlt: string | null;
   instagramUrl: string | null;
@@ -89,7 +107,7 @@ export async function getEventPosters(): Promise<EventPoster[]> {
     })
     .from(events)
     .where(and(eq(events.published, true), isNotNull(events.posterUrl)))
-    .orderBy(desc(events.startsAt));
+    .orderBy(sql`${events.startsAt} desc nulls last`);
 
   // `isNotNull` above has already done the filtering; this narrows the type.
   return rows.filter(

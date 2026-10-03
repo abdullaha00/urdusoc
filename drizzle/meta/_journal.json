@@ -43,6 +43,13 @@
       "when": 1790879631579,
       "tag": "0005_petite_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791032502421,
+      "tag": "0006_groovy_dragon_man",
+      "breakpoints": true
     }
   ]
 }

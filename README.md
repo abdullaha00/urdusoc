@@ -289,6 +289,10 @@ Marketplace. Set the variables in [`.env.example`](.env.example), using Neon's
 **pooled** connection string, then run `npm run db:migrate` and
 `npm run db:seed` once against production.
 
+After setup, Vercel applies pending Drizzle migrations before each build via
+the `buildCommand` in `vercel.json`. Local `npm run build` still builds without
+touching a database.
+
 Set `SEED_ADMIN_EMAIL` for that seed run: it becomes the first owner, and
 without it nobody can sign in. It must be a University address
 (`crsid@cam.ac.uk`), since sign-in is Raven. `AUTH_GOOGLE_ID` and

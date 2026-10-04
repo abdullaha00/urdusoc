@@ -280,7 +280,6 @@ not discovered by a reader of the live site:
 - **The `/history` entries are mostly unsourced.** Only the Iqbal lodgings entry
   cites anything. See the warning at the top of `src/lib/heritage.ts`; the
   hedged wording in some entries is deliberate.
-- **`public/su-logo.svg` is a stand-in** for the real Cambridge SU logo.
 
 ## Deployment
 
@@ -321,7 +320,7 @@ this public repository.
 
 [MIT](LICENSE) for the source code.
 
-The logo, term cards, Cambridge SU mark, gallery photographs and quoted verse
-are **not** covered - they belong to the society and to their respective
-authors. If you are reusing this for another society, swap in your own branding
-and content first; see the scope note in [LICENSE](LICENSE).
+The logo, term cards, gallery photographs and quoted verse are **not** covered -
+they belong to the society and to their respective authors. If you are reusing
+this for another society, swap in your own branding and content first; see the
+scope note in [LICENSE](LICENSE).

@@ -23,6 +23,22 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
+function SuAffiliation() {
+  return (
+    <a
+      href={EXTERNAL_LINKS.cambridgeSu}
+      className="group mt-8 inline-block border-t border-rule pt-3"
+    >
+      <span className="block text-[0.6rem] tracking-[0.16em] text-ink-muted uppercase transition-colors duration-200 group-hover:text-forest">
+        A registered
+      </span>
+      <span className="mt-0.5 block font-serif text-base leading-tight tracking-tight text-forest transition-colors duration-200 group-hover:text-wine">
+        Cambridge SU society
+      </span>
+    </a>
+  );
+}
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-rule bg-paper-deep">
@@ -51,36 +67,7 @@ export function SiteFooter() {
               {footer.blurb}
             </p>
 
-            {/*
-              Affiliation, moved down from the old header identity bar.
-
-              The mark in public/su-logo.svg is a stand-in: the SU's logo is
-              theirs to license, so ask them for the file and save it over that
-              one. The wording holds either way.
-
-              Deliberately the SU and not the University crest - the University
-              restricts its arms and name-marks, and a student society needs
-              written permission it does not currently have.
-            */}
-            <a
-              href={EXTERNAL_LINKS.cambridgeSu}
-              className="group mt-8 inline-flex items-center gap-3.5 border-t border-rule pt-3 transition-colors duration-200 hover:text-wine"
-            >
-              {/* Decorative: the affiliation is spelled out alongside it. */}
-              <Image
-                src="/su-logo.svg"
-                alt=""
-                aria-hidden
-                width={36}
-                height={36}
-                className="size-9 shrink-0"
-              />
-              <span className="text-[0.62rem] leading-[1.7] tracking-[0.2em] text-ink-muted uppercase transition-colors duration-200 group-hover:text-forest">
-                A registered
-                <br />
-                Cambridge SU society
-              </span>
-            </a>
+            <SuAffiliation />
           </div>
 
           {footerGroups.map((group) => (

@@ -54,6 +54,74 @@ export function collaborationLine(event: Event): string | null {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Academic terms                                                             */
+/* -------------------------------------------------------------------------- */
+
+const termDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  month: "numeric",
+  timeZone: "Europe/London",
+  year: "numeric",
+});
+
+type TermOrder = "ascending" | "descending";
+
+export type EventTermGroup<T> = {
+  events: T[];
+  label: string;
+};
+
+function academicTerm(date: Date): { label: string; sortKey: number } {
+  const parts = termDateFormatter.formatToParts(date);
+  const month = Number(parts.find((part) => part.type === "month")?.value);
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+
+  if (month <= 3) return { label: `Lent ${year}`, sortKey: year * 4 };
+  if (month <= 6) return { label: `Easter ${year}`, sortKey: year * 4 + 1 };
+  if (month <= 9) {
+    return { label: `Long Vacation ${year}`, sortKey: year * 4 + 2 };
+  }
+
+  return { label: `Michaelmas ${year}`, sortKey: year * 4 + 3 };
+}
+
+/**
+ * Groups dated events by the Cambridge term in which they occur.
+ *
+ * Undated events use `undatedDate`, which puts TBC upcoming events in the
+ * current term. Event order within each term is left untouched.
+ */
+export function groupEventsByTerm<T extends { startsAt: Date | null }>(
+  events: T[],
+  order: TermOrder,
+  undatedDate = new Date(),
+): EventTermGroup<T>[] {
+  const groups = new Map<
+    number,
+    EventTermGroup<T> & { sortKey: number }
+  >();
+
+  for (const event of events) {
+    const term = academicTerm(event.startsAt ?? undatedDate);
+    const group = groups.get(term.sortKey);
+
+    if (group) {
+      group.events.push(event);
+    } else {
+      groups.set(term.sortKey, { ...term, events: [event] });
+    }
+  }
+
+  return [...groups.values()]
+    .sort((a, b) =>
+      order === "ascending" ? a.sortKey - b.sortKey : b.sortKey - a.sortKey,
+    )
+    .map(({ events: groupedEvents, label }) => ({
+      events: groupedEvents,
+      label,
+    }));
+}
+
+/* -------------------------------------------------------------------------- */
 /* Featured / rest split                                                       */
 /* -------------------------------------------------------------------------- */
 

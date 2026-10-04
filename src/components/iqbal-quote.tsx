@@ -156,7 +156,7 @@ export function IqbalQuote() {
       */}
       <div
         ref={wrapperRef}
-        className="relative h-screen motion-safe:h-[350vh]"
+        className="relative h-screen motion-safe:h-[250vh] md:motion-safe:h-[350vh]"
       >
         <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden">
           <Stars />

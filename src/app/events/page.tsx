@@ -3,7 +3,7 @@ import Image from "next/image";
 import { EventList, FeaturedList } from "@/components/event-postcard";
 import { PageHeader, SectionLabel } from "@/components/ui";
 import { termCards } from "@/lib/content";
-import { splitFeatured } from "@/lib/events";
+import { groupEventsByTerm, splitFeatured } from "@/lib/events";
 import { getPastEvents, getUpcomingEvents } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,10 @@ export default async function EventsPage() {
     getPastEvents(),
   ]);
 
-  const { featured, rest: grid } = splitFeatured(upcoming);
+  const { featured } = splitFeatured(upcoming);
+  const now = new Date();
+  const featuredTerms = groupEventsByTerm(featured, "ascending", now);
+  const pastTerms = groupEventsByTerm(past, "descending", now);
 
   return (
     <>
@@ -36,7 +39,17 @@ export default async function EventsPage() {
             <SectionLabel as="h2" trailingRule className="text-ink-muted">
               Featured
             </SectionLabel>
-            <FeaturedList events={featured} className="mt-10" />
+
+            <div className="mt-10 space-y-14">
+              {featuredTerms.map((term) => (
+                <div key={term.label}>
+                  <h3 className="font-serif text-2xl tracking-tight text-forest">
+                    {term.label}
+                  </h3>
+                  <FeaturedList events={term.events} className="mt-6" />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       ) : null}
@@ -67,9 +80,19 @@ export default async function EventsPage() {
         <section className="bg-paper-deep">
           <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-24">
             <SectionLabel as="h2" trailingRule className="text-ink-muted">
-              Past Events
+              Past events
             </SectionLabel>
-            <EventList events={past} muted className="mt-10" />
+
+            <div className="mt-10 space-y-14">
+              {pastTerms.map((term) => (
+                <div key={term.label}>
+                  <h3 className="font-serif text-2xl tracking-tight">
+                    {term.label}
+                  </h3>
+                  <EventList events={term.events} muted className="mt-6" />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       ) : null}

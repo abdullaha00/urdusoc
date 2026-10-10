@@ -65,7 +65,7 @@ function CategoryLabel({ event }: { event: Event }) {
   );
 }
 
-function Poster({
+export function Poster({
   event,
   sizes,
   className = "",
@@ -74,34 +74,38 @@ function Poster({
   sizes: string;
   className?: string;
 }) {
-  return (
-    <div
-      className={`relative flex items-center justify-center overflow-hidden border border-rule bg-paper-deep ${className}`}
+  if (!event.posterUrl) return null;
+
+  const artwork = (
+    <Image
+      src={event.posterUrl}
+      // Falls back to the title rather than an empty string: the poster is
+      // the only place some events state their guest or their venue.
+      alt={event.posterAlt ?? event.title}
+      fill
+      sizes={sizes}
+      className="object-cover"
+    />
+  );
+
+  const classes = `relative flex items-center justify-center overflow-hidden border border-rule bg-paper-deep ${
+    event.instagramUrl
+      ? "transition-colors duration-200 hover:border-gold"
+      : ""
+  } ${className}`;
+
+  return event.instagramUrl ? (
+    <a
+      href={event.instagramUrl}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`View ${event.title} on Instagram`}
+      className={classes}
     >
-      {event.posterUrl ? (
-        <Image
-          src={event.posterUrl}
-          // Falls back to the title rather than an empty string: the poster is
-          // the only place some events state their guest or their venue.
-          alt={event.posterAlt ?? event.title}
-          fill
-          sizes={sizes}
-          className="object-cover"
-        />
-      ) : (
-        // Plenty of events never had a poster, and an entry that simply omits
-        // the image breaks the alignment of everything beside it. The society's
-        // own mark, set quietly, holds the space without pretending to be art.
-        <Image
-          src="/logo.png"
-          alt=""
-          width={600}
-          height={600}
-          sizes={sizes}
-          className="w-1/2 opacity-25"
-        />
-      )}
-    </div>
+      {artwork}
+    </a>
+  ) : (
+    <div className={classes}>{artwork}</div>
   );
 }
 
@@ -112,7 +116,7 @@ function Poster({
  * pointing at where the rest of this evening lives, and forty of them down a
  * list must not turn the programme into a wall of calls to action.
  */
-function InstagramLink({
+export function InstagramLink({
   event,
   className = "",
 }: {
@@ -190,11 +194,10 @@ function DateLine({ event, className = "" }: { event: Event; className?: string 
 /**
  * One row of the featured list. Renders its own `<li>` - see `FeaturedList`.
  *
- * The compact row's shape at a larger size: bigger poster, title and date on
- * the same baseline either side of the row, and then the things only a featured
- * entry says - the summary, the co-hosts, the price - filling the left column
- * underneath. The category sits above the pair so the date still lines up with
- * the title rather than with a line of small caps.
+ * The compact row's shape at a larger size: title and date on the same baseline
+ * either side of the row, and then the things only a featured entry says - the
+ * summary, the co-hosts, the price - filling the left column underneath. When
+ * present, the larger poster sits below the date in the right column.
  */
 export function FeaturedRow({ event }: { event: Event }) {
   const collaboration = collaborationLine(event);
@@ -203,14 +206,8 @@ export function FeaturedRow({ event }: { event: Event }) {
     <li className="relative border-b border-rule">
       <CategoryStrip event={event} />
 
-      <div className="flex items-start gap-4 py-6 pl-5 sm:gap-6 sm:pl-6">
-        <Poster
-          event={event}
-          sizes="(min-width: 640px) 7rem, 5rem"
-          className="aspect-[4/5] w-20 shrink-0 sm:w-28"
-        />
-
-        <div className="min-w-0 flex-1">
+      <div className="py-6 pl-5 sm:pl-6">
+        <div className="min-w-0">
           <CategoryLabel event={event} />
 
           <div className="mt-2 sm:flex sm:items-baseline sm:justify-between sm:gap-6">
@@ -256,16 +253,22 @@ export function FeaturedRow({ event }: { event: Event }) {
               <InstagramLink event={event} className="mt-3" />
             </div>
 
-            {/* Date and price travel together in the right-hand column, so the
-                featured dates sit on the same edge as the programme's below.
-                Side by side on a narrow screen, stacked once there is a column
-                to stack them in. */}
-            <div className="mt-3 flex items-baseline gap-3 sm:mt-0 sm:shrink-0 sm:flex-col sm:items-end sm:gap-1">
-              <DateLine
+            {/* Date, time and artwork share the right-hand column. Events
+                without artwork keep the same text-only row without an empty
+                box or reserved gap. */}
+            <div className="mt-3 sm:mt-0 sm:w-28 sm:shrink-0">
+              <div className="flex items-baseline gap-3 sm:flex-col sm:items-end sm:gap-1">
+                <DateLine
+                  event={event}
+                  className="font-serif text-base text-forest sm:text-lg"
+                />
+                <PriceNote event={event} className="text-xs sm:text-sm" />
+              </div>
+              <Poster
                 event={event}
-                className="font-serif text-base text-forest sm:text-lg"
+                sizes="(min-width: 640px) 7rem, 5rem"
+                className="mt-3 aspect-[4/5] w-20 sm:w-28"
               />
-              <PriceNote event={event} className="text-xs sm:text-sm" />
             </div>
           </div>
         </div>
@@ -297,10 +300,10 @@ export function FeaturedList({
  * One row of the programme list. Renders its own `<li>`, so a list is just
  * these in a `<ul>` - see `EventList` below.
  *
- * Thumbnail, title, venue, date. On a narrow screen the date drops under the
- * venue; from `sm` up it sits in its own right-hand column, which is what makes
- * a long list scannable - the dates line up, so the eye runs down one edge
- * rather than hunting through each entry for them.
+ * Title, venue, date. On a narrow screen the date drops under the venue; from
+ * `sm` up it sits in its own right-hand column, which is what makes a long list
+ * scannable. When a poster exists it sits below that date, rather than making
+ * every event reserve a thumbnail column.
  */
 export function EventRow({
   event,
@@ -313,13 +316,7 @@ export function EventRow({
     <li className={`relative border-b border-rule ${muted ? "opacity-70" : ""}`}>
       <CategoryStrip event={event} />
 
-      <div className="flex items-center gap-4 py-3 pl-5 sm:gap-5 sm:pl-6">
-        <Poster
-          event={event}
-          sizes="64px"
-          className="aspect-[4/5] w-12 shrink-0 sm:w-14"
-        />
-
+      <div className="py-3 pl-5 sm:pl-6">
         {/* min-w-0 lets the long venue names truncate instead of shoving the
             date column off the right edge. */}
         <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:justify-between sm:gap-6">
@@ -337,10 +334,17 @@ export function EventRow({
             <InstagramLink event={event} className="mt-1" />
           </div>
 
-          <DateLine
-            event={event}
-            className="mt-1 block text-xs text-forest sm:mt-0 sm:shrink-0 sm:text-right sm:text-sm"
-          />
+          <div className="mt-1 sm:mt-0 sm:w-14 sm:shrink-0">
+            <DateLine
+              event={event}
+              className="block text-xs text-forest sm:text-right sm:text-sm"
+            />
+            <Poster
+              event={event}
+              sizes="56px"
+              className="mt-2 aspect-[4/5] w-12 sm:ml-auto sm:w-14"
+            />
+          </div>
         </div>
       </div>
     </li>

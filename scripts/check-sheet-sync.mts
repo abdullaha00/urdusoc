@@ -16,7 +16,11 @@ import { eq, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "../src/lib/db/schema";
-import { parseSheetDate, parseSheetTime } from "../src/lib/sheets/event-row";
+import {
+  CANONICAL_HEADERS,
+  parseSheetDate,
+  parseSheetTime,
+} from "../src/lib/sheets/event-row";
 import { syncEventsFromSheet } from "../src/lib/sheets/sync";
 
 const url = process.env.DATABASE_URL;
@@ -66,6 +70,13 @@ check("12am is midnight", parseSheetTime("12am"), "00:00");
 check("12pm is midday", parseSheetTime("12pm"), "12:00");
 check("25:00 is refused", parseSheetTime("25:00"), null);
 check("13pm is refused", parseSheetTime("13pm"), null);
+check(
+  "new term sheets include poster and Instagram columns",
+  ["Poster URL", "Poster alt", "Instagram URL"].every((heading) =>
+    CANONICAL_HEADERS.includes(heading),
+  ),
+  true,
+);
 
 /* -------------------------------------------------------------------------- */
 /* The engine                                                                  */
@@ -87,6 +98,7 @@ const HEADERS = [
   "Published",
   "Poster URL",
   "Poster alt",
+  "Instagram URL",
   "Slug",
 ];
 
@@ -129,6 +141,7 @@ const MUSHAIRA: Cells = {
   "End time": "9pm",
   Venue: "Trinity Old Combination Room",
   Category: "cultural",
+  "Instagram URL": "https://www.instagram.com/p/example/",
   Published: "yes",
 };
 
@@ -188,6 +201,11 @@ check("key is title + date", a?.sheetRowKey, "check-mushaira-2026-10-23");
 check("published flag honoured", [a?.published, b?.published], [true, false]);
 check("slug carries the date", a?.slug, "check-mushaira-2026-10-23");
 check("venue stored", a?.venue, "Trinity Old Combination Room");
+check(
+  "Instagram post stored",
+  a?.instagramUrl,
+  "https://www.instagram.com/p/example/",
+);
 // 23 October 2026 is BST, so 7pm London is 18:00Z. Getting this wrong is the
 // single most likely bug in the whole feature.
 check("7pm BST stored as 18:00Z", a?.startsAt?.toISOString(), "2026-10-23T18:00:00.000Z");

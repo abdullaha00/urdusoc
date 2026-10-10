@@ -11,6 +11,29 @@ export const metadata: Metadata = {
     "Couplets, transliteration and translation from the Cambridge University Urdu Society - plus where to start if you are learning.",
 };
 
+const learningResources = [
+  {
+    name: "Aamozish",
+    focus: "Urdu script",
+    href: "https://rekhtalearning.com/aamozish/",
+  },
+  {
+    name: "Let's Learn Urdu",
+    focus: "Textbook PDF",
+    href: "https://www.urducouncil.nic.in/sites/default/files/2024-07/Let%27s%20Learn%20Urdu%20%28English%29.pdf",
+  },
+  {
+    name: "UrduPod101",
+    focus: "Audio & video",
+    href: "https://www.urdupod101.com/",
+  },
+  {
+    name: "Rekhta Dictionary",
+    focus: "Words & pronunciation",
+    href: "https://www.rekhta.org/Dictionary",
+  },
+] as const;
+
 // Hidden for now, alongside the "If you are just starting" section below.
 // const startingPoints = [
 //   {
@@ -106,6 +129,51 @@ export default async function UrduPage() {
           </div>
         </section>
       ) : null}
+
+      <section id="resources" className="border-b border-rule/70 bg-paper-deep">
+        <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 lg:py-16">
+          <div className="flex items-center gap-6">
+            <SectionLabel as="h2" className="shrink-0 text-ink-muted">
+              Learn Urdu
+            </SectionLabel>
+            <Urdu className="ml-auto text-lg text-gold-deep">
+              اردو سیکھیں
+            </Urdu>
+          </div>
+
+          <ul className="mt-8 grid border-t border-l border-rule sm:grid-cols-2">
+            {learningResources.map((resource) => (
+              <li key={resource.name} className="border-r border-b border-rule">
+                <a
+                  href={resource.href}
+                  className="group flex min-h-24 items-center justify-between gap-5 bg-paper/35 px-5 py-4 transition-colors duration-200 hover:bg-paper sm:px-6"
+                >
+                  <span>
+                    <span className="block font-serif text-xl tracking-tight text-forest">
+                      {resource.name}
+                    </span>
+                    <span className="mt-1 block text-[0.65rem] font-medium tracking-[0.18em] text-ink-muted uppercase">
+                      {resource.focus}
+                    </span>
+                  </span>
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 20 20"
+                    className="size-4 shrink-0 text-gold-deep transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 15 15 5M7 5h8v8" />
+                  </svg>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       {/* Hidden for now.
       <section>

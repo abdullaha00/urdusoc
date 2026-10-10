@@ -148,7 +148,7 @@ spellings of each heading are accepted - see `COLUMN_ALIASES` in
 `src/lib/sheets/event-row.ts`. Only `Title`, `Summary` and `Date` must be
 present; everything else is optional.
 
-`npm run sheet:headers` prints the eight columns a term card actually needs:
+`npm run sheet:headers` prints the eleven columns a term card actually needs:
 
 | Column | Notes |
 | --- | --- |
@@ -158,6 +158,8 @@ present; everything else is optional.
 | `Venue` | |
 | `Kind` | `mushaira`, `social`, `workshop` or `talk` - a label on the event page. Defaults to `mushaira`. |
 | `Category` | `academic`, `cultural` or `social` - the colour on `/events` and its legend. Defaults to `cultural`. |
+| `Poster URL`, `Poster alt` | The event artwork and a short description of it. Both are required when a poster is supplied. |
+| `Instagram URL` | The society's post for the event. The public event row links to it. |
 | `Published` | `yes` puts it on the public site. **Do not remove this column**: it defaults to no, so a sheet without it publishes nothing. |
 
 Add any of these when you need them; the sync picks up a new heading on the
@@ -172,7 +174,6 @@ next run, with no deploy:
 | `Capacity` | Absent or blank means uncapped. |
 | `Collaborators` | Comma-separated. Any value marks the event as a collaboration; there is no separate tick-box to keep in step. |
 | `Featured`, `Priority` | Pushes an event into the featured list at the top of `/events`. With none set, that list falls back to the nearest upcoming events. |
-| `Poster URL`, `Poster alt` | A poster needs both - a row with a URL and no description is refused. Upload in `/admin/gallery` and paste the address; a Google Drive link will not render. |
 | `Slug` | Pins the web address. Blank derives it from the title and date. |
 | `Key` | Pins identity. See below. |
 

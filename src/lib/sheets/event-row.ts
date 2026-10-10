@@ -689,7 +689,7 @@ export function parseEventRow(
 
 /**
  * The heading row `npm run sheet:headers` prints - enough for a term card and
- * nothing else.
+ * its poster and Instagram post, and nothing else.
  *
  * Every other column in `COLUMN_ALIASES` still works if a committee adds it;
  * they are listed in the README under the columns you can add later. Two are
@@ -697,6 +697,9 @@ export function parseEventRow(
  *
  *   · leaving `Ticketing` and `Capacity` out means no bookings and no cap,
  *     which is the intended default;
+ *   · `Poster URL`, `Poster alt` and `Instagram URL` are included because
+ *     each new event is announced with a post, and the public event rows show
+ *     its artwork and link to it;
  *   · `Published` must stay. It defaults to false, so a sheet without that
  *     column publishes nothing at all.
  */
@@ -708,5 +711,8 @@ export const CANONICAL_HEADERS: string[] = [
   "Venue",
   "Kind",
   "Category",
+  "Poster URL",
+  "Poster alt",
+  "Instagram URL",
   "Published",
 ];

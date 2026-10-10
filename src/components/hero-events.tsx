@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import Image from "next/image";
+import { InstagramLink, Poster } from "@/components/event-postcard";
 import { currentTermCard, hero } from "@/lib/content";
 import type { Event } from "@/lib/db/schema";
 import {
@@ -208,16 +209,33 @@ function EventProgramme({ events }: { events: Event[] }) {
             // share of the slack, which left the rules falling at uneven
             // intervals once one title wrapped.
             <li key={event.id} className="sm:flex-1 sm:basis-0">
-              {/* A programme line, not a link: the per-event pages are archived
-                  (see archive/event-pages/README.md), and "View all events"
-                  below is the only place left to go. */}
-              <div className="grid h-full content-center gap-3 px-6 py-5 sm:grid-cols-[6.5rem_1fr] sm:items-baseline sm:gap-5 sm:px-9 sm:py-6">
-                <EventWhen event={event} />
-
+              <div className="grid h-full content-center gap-3 px-6 py-5 sm:grid-cols-[6.5rem_minmax(0,1fr)] sm:items-start sm:gap-5 sm:px-9 sm:py-6">
                 <div>
-                  <h3 className="font-serif text-[1.45rem] leading-[1.08] tracking-tight text-balance sm:text-[1.7rem]">
-                    {event.title}
-                  </h3>
+                  <EventWhen event={event} />
+                  <Poster
+                    event={event}
+                    sizes="104px"
+                    className="mt-3 aspect-[4/5] w-20 sm:w-full"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  {event.instagramUrl ? (
+                    <a
+                      href={event.instagramUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="transition-colors duration-200 hover:text-forest"
+                    >
+                      <h3 className="font-serif text-[1.45rem] leading-[1.08] tracking-tight text-balance sm:text-[1.7rem]">
+                        {event.title}
+                      </h3>
+                    </a>
+                  ) : (
+                    <h3 className="font-serif text-[1.45rem] leading-[1.08] tracking-tight text-balance sm:text-[1.7rem]">
+                      {event.title}
+                    </h3>
+                  )}
                   {event.titleUrdu ? (
                     <Urdu className="mt-1 inline-block text-base leading-[1.5] text-gold-deep sm:text-lg">
                       {event.titleUrdu}
@@ -240,6 +258,8 @@ function EventProgramme({ events }: { events: Event[] }) {
                   <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-muted">
                     {event.summary}
                   </p>
+
+                  <InstagramLink event={event} className="mt-2" />
                 </div>
               </div>
             </li>

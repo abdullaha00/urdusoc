@@ -15,6 +15,13 @@ const nextConfig: NextConfig = {
         hostname: "*.public.blob.vercel-storage.com",
         pathname: "/**",
       },
+      {
+        // Event posters committed under /public and referenced by their
+        // canonical URL in the events sheet.
+        protocol: "https",
+        hostname: "www.urdusoc.org",
+        pathname: "/event-posters/**",
+      },
     ],
   },
 };

@@ -50,6 +50,13 @@
       "when": 1791032502421,
       "tag": "0006_groovy_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791590400000,
+      "tag": "0007_michaelmas_2026_events",
+      "breakpoints": true
     }
   ]
 }

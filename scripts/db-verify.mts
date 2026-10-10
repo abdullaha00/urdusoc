@@ -42,16 +42,33 @@ for (const line of summary) console.log(`  ${line}`);
 console.log("\nChecking seeded content…");
 
 const events = await db.select().from(schema.events);
-check("one published event", events.length === 1 && events[0].published);
 check(
-  "event has an Urdu label",
-  events[0]?.kindUrdu === "محفل",
-  events[0]?.kindUrdu ?? undefined,
+  "five published Michaelmas events",
+  events.length === 5 && events.every((event) => event.published),
+  String(events.length),
 );
 check(
-  "event starts 7pm UK time on 23 Oct 2026",
-  events[0]?.startsAt?.toISOString() === "2026-10-23T18:00:00.000Z",
-  events[0]?.startsAt?.toISOString(),
+  "the term card's confirmed events are seeded",
+  [
+    "Chai and Chat",
+    "Cambridge South Asia Tour",
+    "Jinn-o-ween",
+    "Iqbal and the Poetics of Awakening",
+    "Talk with Dr Hina Khalid",
+  ].every((title) => events.some((event) => event.title === title)),
+);
+const chai = events.find((event) => event.slug === "chai-and-chat-2026-10-11");
+check(
+  "Chai and Chat runs 3–6pm UK time",
+  chai?.startsAt?.toISOString() === "2026-10-11T14:00:00.000Z" &&
+    chai.endsAt?.toISOString() === "2026-10-11T17:00:00.000Z",
+  chai?.startsAt?.toISOString(),
+);
+check(
+  "events without a confirmed hour show only their date",
+  events
+    .filter((event) => event.startsAt && event.startsAt >= new Date("2026-10-29"))
+    .every((event) => !event.showTime),
 );
 
 const featured = await db
@@ -120,6 +137,8 @@ const second = await seed(db, "committee@example.com");
 for (const line of second) console.log(`  ${line}`);
 const versesAfter = await db.select().from(schema.verses);
 check("seed did not duplicate verses", versesAfter.length === 3, String(versesAfter.length));
+const eventsAfter = await db.select().from(schema.events);
+check("seed restored one deleted event", eventsAfter.length === 5, String(eventsAfter.length));
 
 await client.close();
 

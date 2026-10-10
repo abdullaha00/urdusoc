@@ -1,22 +1,75 @@
 /**
- * Seeds a fresh database with the content the site launched with.
+ * Seeds a fresh database with the site's current public content.
  *
- * Running this on an empty database reproduces the original mock-up exactly, so
- * a new deployment looks finished before the committee has added anything.
  * It is idempotent: rows are skipped if a record with the same key exists.
  *
  * Usage: `npm run db:seed` (needs DATABASE_URL, and SEED_ADMIN_EMAIL for the
  * first committee login).
  */
 
-import { sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./schema";
 
 type AnyDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
 
-/** 7pm on Friday 23 October 2026, British Summer Time (UTC+1). */
-const FIRST_EVENT_START = new Date("2026-10-23T18:00:00.000Z");
+const michaelmas2026Events: (typeof schema.events.$inferInsert)[] = [
+  {
+    slug: "chai-and-chat-2026-10-11",
+    title: "Chai and Chat",
+    kind: "social",
+    category: "social",
+    summary: "An afternoon of chai and conversation in the Munby Room.",
+    startsAt: new Date("2026-10-11T14:00:00.000Z"),
+    endsAt: new Date("2026-10-11T17:00:00.000Z"),
+    venue: "Munby Room, King's College",
+    published: true,
+  },
+  {
+    slug: "cambridge-south-asia-tour-2026-10-16",
+    title: "Cambridge South Asia Tour",
+    kind: "social",
+    category: "cultural",
+    summary: "A walking tour of Cambridge's South Asian history.",
+    startsAt: new Date("2026-10-16T15:00:00.000Z"),
+    endsAt: new Date("2026-10-16T16:00:00.000Z"),
+    venue: "Meet outside King's College",
+    published: true,
+  },
+  {
+    slug: "jinn-o-ween-2026-10-29",
+    title: "Jinn-o-ween",
+    kind: "mushaira",
+    category: "cultural",
+    isCollaboration: true,
+    collaborators: ["Majlis"],
+    summary: "A Jinn-o-ween gathering with Majlis.",
+    startsAt: new Date("2026-10-29T12:00:00.000Z"),
+    showTime: false,
+    published: true,
+  },
+  {
+    slug: "iqbal-and-the-poetics-of-awakening-2026-11-22",
+    title: "Iqbal and the Poetics of Awakening",
+    kind: "talk",
+    category: "academic",
+    summary: "A speaker event with Walid Iqbal on Iqbal's poetics of awakening.",
+    startsAt: new Date("2026-11-22T12:00:00.000Z"),
+    showTime: false,
+    published: true,
+  },
+  {
+    slug: "talk-with-dr-hina-khalid-2026-11-26",
+    title: "Talk with Dr Hina Khalid",
+    kind: "talk",
+    category: "academic",
+    summary:
+      "A talk with the author of Words of Witness: Divine Call and Human Response in Iqbal and Tagore.",
+    startsAt: new Date("2026-11-26T12:00:00.000Z"),
+    showTime: false,
+    published: true,
+  },
+];
 
 const SOCIETY_ROLES = [
   "President",
@@ -34,29 +87,25 @@ export async function seed(db: AnyDatabase, adminEmail?: string) {
   /* Events ---------------------------------------------------------------- */
   const insertedEvents = await db
     .insert(schema.events)
-    .values({
-      slug: "an-evening-of-urdu-poetry",
-      title: "An Evening of Urdu Poetry",
-      kind: "mushaira",
-      kindUrdu: "محفل",
-      summary:
-        "An evening of ghazal, nazm and new student writing, read aloud between cups of chai.",
-      body: [
-        "Our termly mushaira brings together students, alumni and guest poets for an",
-        "evening of reading aloud. Bring something of your own, bring a favourite by",
-        "someone else, or bring nothing at all and simply listen.",
-        "",
-        "No prior Urdu is needed - every piece is introduced in English.",
-      ].join("\n"),
-      startsAt: FIRST_EVENT_START,
-      venue: "Cambridge Union Blue Room",
-      capacity: 80,
-      ticketing: "rsvp",
-      published: true,
-    })
+    .values(michaelmas2026Events)
     .onConflictDoNothing({ target: schema.events.slug })
     .returning({ id: schema.events.id });
   summary.push(`events: ${insertedEvents.length} inserted`);
+
+  const retiredPlaceholder = await db
+    .update(schema.events)
+    .set({ published: false, updatedAt: new Date() })
+    .where(
+      and(
+        eq(schema.events.slug, "an-evening-of-urdu-poetry"),
+        eq(schema.events.published, true),
+        isNull(schema.events.sheetRowKey),
+      ),
+    )
+    .returning({ id: schema.events.id });
+  if (retiredPlaceholder.length > 0) {
+    summary.push("events: retired launch placeholder");
+  }
 
   /* Verses ---------------------------------------------------------------- */
   const verses = [

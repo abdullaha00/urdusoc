@@ -195,7 +195,8 @@ export const footerGroups = [
 ] as const;
 
 /**
- * Past term cards, shown as an archive on /events.
+ * Term cards, shown as an archive on /events. The latest one also appears in
+ * the home-page paper stack.
  *
  * Static rather than gallery albums, so they work without a Vercel Blob store:
  * add a term by dropping the images into public/term-cards/ and adding an entry
@@ -207,6 +208,20 @@ export const footerGroups = [
  * so for those the image is the only record, and its alt text is the only way a
  * screen reader can reach them.
  */
+export const currentTermCard = {
+  term: "Michaelmas 2026",
+  instagramUrl: "https://www.instagram.com/p/DeO-anPt47y/?hl=en",
+  imagesLinkToFullSize: false,
+  images: [
+    {
+      src: "/term-cards/michaelmas-2026.jpg",
+      width: 1350,
+      height: 1688,
+      alt: "Michaelmas 2026 term card. Chai and Chat on 11 October; Cambridge South Asia Tour on 16 October; Jinn-o-ween with Majlis on 29 October; South Asian Musical Games Night with CamSAMS, date to be confirmed; speaker event with Walid Iqbal on 22 November; and a talk with Dr Hina Khalid on 26 November.",
+    },
+  ],
+} as const;
+
 export const termCards = [
   {
     term: "Michaelmas 2025",
@@ -248,6 +263,7 @@ export const termCards = [
       },
     ],
   },
+  currentTermCard,
 ] as const;
 
 /**

@@ -114,13 +114,17 @@ export default async function EventsPage() {
                     terms' cards are different shapes. */}
                 <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {card.images.map((image) => (
-                    <li key={image.src}>
-                      <a
-                        href={image.src}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block overflow-hidden rounded-sm border border-rule shadow-paper transition-colors duration-200 hover:border-gold"
-                      >
+                    <li
+                      key={image.src}
+                      className={
+                        "imagesLinkToFullSize" in card &&
+                        !card.imagesLinkToFullSize
+                          ? "overflow-hidden rounded-sm border border-rule shadow-paper"
+                          : undefined
+                      }
+                    >
+                      {"imagesLinkToFullSize" in card &&
+                      !card.imagesLinkToFullSize ? (
                         <Image
                           src={image.src}
                           alt={image.alt}
@@ -129,7 +133,23 @@ export default async function EventsPage() {
                           sizes="(min-width: 1024px) 20rem, (min-width: 640px) 45vw, 90vw"
                           className="h-auto w-full"
                         />
-                      </a>
+                      ) : (
+                        <a
+                          href={image.src}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block overflow-hidden rounded-sm border border-rule shadow-paper transition-colors duration-200 hover:border-gold"
+                        >
+                          <Image
+                            src={image.src}
+                            alt={image.alt}
+                            width={image.width}
+                            height={image.height}
+                            sizes="(min-width: 1024px) 20rem, (min-width: 640px) 45vw, 90vw"
+                            className="h-auto w-full"
+                          />
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>

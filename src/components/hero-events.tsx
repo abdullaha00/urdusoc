@@ -342,13 +342,15 @@ function TitlePage() {
 
       <div className="relative flex flex-col items-center">
         {hero.motifWords.map((word, index) => (
-          <div key={word.urdu} className="flex flex-col items-center">
+          <div key={word.urdu} className="flex w-full flex-col items-center">
             {index > 0 ? <Diamond className="mt-2 mb-3 opacity-70" /> : null}
-            <Urdu className="text-4xl leading-[1.55] text-forest sm:text-5xl lg:text-[3.35rem]">
+            <Urdu
+              className={`${word.urdu === "ثقافت" ? "mt-[1.875rem]" : ""} text-4xl leading-[1.55] text-forest sm:text-5xl lg:text-[3.35rem]`}
+            >
               {word.urdu}
             </Urdu>
             <span
-              className={`${deepDescenders.has(word.urdu) ? "mt-5" : "mt-1"} -me-[0.3em] text-[0.6rem] tracking-[0.3em] text-ink-muted uppercase sm:text-[0.65rem]`}
+              className={`${deepDescenders.has(word.urdu) ? "mt-3" : "mt-1"} -translate-y-2 block w-full ps-[0.3em] text-center text-[0.6rem] tracking-[0.3em] text-ink-muted uppercase sm:text-[0.65rem]`}
             >
               {word.english}
             </span>

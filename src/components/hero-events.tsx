@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { hero } from "@/lib/content";
+import Image from "next/image";
+import { currentTermCard, hero } from "@/lib/content";
 import type { Event } from "@/lib/db/schema";
 import {
   formatEventDateShort,
@@ -12,7 +13,7 @@ import {
 } from "@/lib/format";
 import { ArrowLink, Diamond, Urdu } from "@/components/ui";
 
-type Panel = "title" | "events";
+type Panel = "title" | "events" | "term-card";
 
 export function HeroEvents({ events }: { events: Event[] }) {
   // The programme is what a visitor came for, so it is what the card opens on;
@@ -44,6 +45,14 @@ export function HeroEvents({ events }: { events: Event[] }) {
           Events
         </PanelTab>
         <PanelTab
+          id="hero-term-card-tab"
+          controls="hero-term-card-panel"
+          selected={panel === "term-card"}
+          onClick={() => show("term-card")}
+        >
+          Term Card
+        </PanelTab>
+        <PanelTab
           id="hero-title-tab"
           controls="hero-title-panel"
           selected={panel === "title"}
@@ -54,7 +63,9 @@ export function HeroEvents({ events }: { events: Event[] }) {
       </div>
 
       <PaperStack shuffle={shuffle}>
-        {panel === "title" ? (
+        {panel === "term-card" ? (
+          <TermCard />
+        ) : panel === "title" ? (
           <div
             id="hero-title-panel"
             role="region"
@@ -74,6 +85,28 @@ export function HeroEvents({ events }: { events: Event[] }) {
           </div>
         )}
       </PaperStack>
+    </div>
+  );
+}
+
+function TermCard() {
+  const card = currentTermCard.images[0];
+
+  return (
+    <div
+      id="hero-term-card-panel"
+      role="region"
+      aria-label={`${currentTermCard.term} term card`}
+      className="paper-leaf flex flex-1 items-center justify-center p-2 sm:p-3"
+    >
+      <Image
+        src={card.src}
+        alt={card.alt}
+        width={card.width}
+        height={card.height}
+        sizes="(min-width: 1024px) 27rem, (min-width: 640px) 26rem, calc(100vw - 4rem)"
+        className="h-auto w-full sm:max-h-[29.5rem] sm:w-auto lg:max-h-[32.5rem]"
+      />
     </div>
   );
 }

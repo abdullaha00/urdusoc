@@ -31,6 +31,7 @@ export const society = {
 export const navLinks = [
   { label: "Events", href: "/events" },
   { label: "Urdu & Poetry", href: "/urdu" },
+  { label: "Resources", href: "/resources" },
   { label: "History", href: "/history" },
   { label: "Gallery", href: "/gallery" },
   { label: "Outreach", href: "/outreach" },
@@ -185,6 +186,7 @@ export const footerGroups = [
     links: [
       { label: "Upcoming events", href: "/events" },
       { label: "Urdu & poetry", href: "/urdu" },
+      { label: "Learning resources", href: "/resources" },
       { label: "Urdu Cambridge", href: "/history" },
       { label: "Outreach", href: "/outreach" },
       { label: "Committee", href: "/committee" },
